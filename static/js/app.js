@@ -14,18 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('coupon-date').valueAsDate = macauTime;
 });
 
-// 打開平臺 App
-function openPlatformApp() {
-    const select = document.getElementById('coupon-platform');
-    const selectedOption = select.options[select.selectedIndex];
-    const link = selectedOption.getAttribute('data-link');
-    if (link) {
-        window.location.href = link;
-    } else {
-        alert('此平臺暫時不支援直接開啟 App');
-    }
-}
-
 // 處理平臺選擇 - 如果有 App Deep Link 就打開
 function handlePlatformSelect(select) {
     const selectedOption = select.options[select.selectedIndex];
@@ -185,15 +173,11 @@ function renderCoupons(coupons) {
         tbody.innerHTML = '<tr><td colspan="4" class="empty-state">暫時未有抽獎記錄<br>填寫上方表單開始記錄</td></tr>';
         return;
     }
-    tbody.innerHTML = coupons.map(coupon => {
-        const link = coupon.platform === 'MPay' ? 'mpay://' : coupon.platform === '支付寶' ? 'alipay://' : '';
-        const platformCell = link
-            ? '<a href="#" onclick="event.preventDefault(); window.location.href=\'' + link + '\'">' + coupon.platform + ' ⬆</a>'
-            : coupon.platform;
-        return '<tr><td>' + platformCell + '</td><td>' + coupon.amount + '元 <span class="status-badge ' + (coupon.is_used ? 'status-used' : 'status-unused') + '">' + (coupon.is_used ? '已用' : '未用') + '</span></td><td>' + formatDateShort(coupon.draw_date) + '</td><td>' +
+    tbody.innerHTML = coupons.map(coupon =>
+        '<tr><td>' + coupon.platform + '</td><td>' + coupon.amount + '元 <span class="status-badge ' + (coupon.is_used ? 'status-used' : 'status-unused') + '">' + (coupon.is_used ? '已用' : '未用') + '</span></td><td>' + formatDateShort(coupon.draw_date) + '</td><td>' +
         (coupon.is_used ? '<button class="btn btn-small btn-secondary" onclick="confirmUnmark(' + coupon.id + ')">未用</button>' : '<button class="btn btn-small btn-primary" onclick="confirmRedeem(' + coupon.id + ')">兌換</button>') +
-        '<button class="btn btn-danger btn-small" onclick="confirmDelete(' + coupon.id + ')">刪</button></td></tr>';
-    }).join('');
+        '<button class="btn btn-danger btn-small" onclick="confirmDelete(' + coupon.id + ')">刪</button></td></tr>'
+    ).join('');
 }
 
 async function handleCouponSubmit(event) {

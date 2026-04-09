@@ -37,12 +37,6 @@ PLATFORMS = [
     "中國銀行"
 ]
 
-# 平臺 Deep Link（iOS App 連結）
-PLATFORM_LINKS = {
-    "MPay": "mpay://",
-    "支付寶": "alipay://"
-}
-
 # 券面額選項
 COUPON_AMOUNTS = [0, 10, 20, 50, 100, 200]
 
@@ -123,8 +117,7 @@ init_db()
 def index():
     """首頁"""
     user_name = session.get('user_name')
-    return render_template('index.html', platforms=PLATFORMS, coupon_amounts=COUPON_AMOUNTS,
-                           platform_links=PLATFORM_LINKS, user_name=user_name)
+    return render_template('index.html', platforms=PLATFORMS, coupon_amounts=COUPON_AMOUNTS, user_name=user_name)
 
 
 @app.route('/login', methods=['POST'])
