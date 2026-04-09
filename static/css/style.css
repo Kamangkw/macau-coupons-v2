@@ -1,0 +1,659 @@
+/* 澳門消費券記錄系統 - 樣式表 */
+
+/* 全域樣式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', 'Microsoft JhengHei', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+}
+
+/* 登入畫面 */
+.login-screen {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.login-box {
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    width: 90%;
+    max-width: 400px;
+}
+
+.login-box h1 {
+    color: #1a1a2e;
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+}
+
+.login-box p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.login-box input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    margin-bottom: 15px;
+}
+
+.login-box input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+/* Header */
+header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: white;
+    padding: 15px 20px;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+header h1 {
+    font-size: 1.2rem;
+    margin-bottom: 3px;
+}
+
+.subtitle {
+    color: #a0a0a0;
+    font-size: 0.8rem;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#user-name-display {
+    font-weight: bold;
+    color: #667eea;
+    font-size: 0.9rem;
+}
+
+/* 面板 */
+.panel {
+    padding: 20px;
+}
+
+/* 可折疊區塊 */
+.collapsible-section {
+    margin-bottom: 20px;
+}
+
+.section-header {
+    cursor: pointer;
+    user-select: none;
+    padding: 10px 0;
+}
+
+.section-header:hover {
+    opacity: 0.8;
+}
+
+.section-header h2 {
+    color: #1a1a2e;
+    font-size: 1.2rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toggle-icon {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.section-content {
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.section-content.collapsed {
+    display: none;
+}
+
+.info-text {
+    color: #888;
+    font-size: 0.85rem;
+    margin-bottom: 15px;
+}
+
+/* 按鈕 */
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+.btn-small {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+}
+
+.btn-save {
+    width: 100%;
+    margin-top: 15px;
+    padding: 14px;
+    font-size: 1.1rem;
+}
+
+/* 抽獎表單 */
+.coupon-form-grid {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.coupon-form-grid .platform-select {
+    flex: 1;
+    min-width: 150px;
+}
+
+.coupon-form-grid .form-group {
+    flex: 0 0 auto;
+}
+
+.coupon-form-grid .form-group input,
+.coupon-form-grid .form-group select {
+    min-width: 120px;
+}
+
+/* 券面額輸入 */
+.amount-inputs {
+    margin-top: 15px;
+}
+
+.amount-inputs > label {
+    display: block;
+    margin-bottom: 8px;
+    color: #666;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.amount-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.amount-entry {
+    text-align: center;
+}
+
+.amount-entry span {
+    display: block;
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 5px;
+}
+
+.amount-entry select {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: white;
+}
+
+.amount-entry select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+/* 表單 */
+.form-group {
+    margin-bottom: 12px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #666;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+/* 篩選器 */
+.filter-row {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+    flex-wrap: wrap;
+}
+
+.filter-row select {
+    padding: 8px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    flex: 1;
+    min-width: 100px;
+    background: white;
+}
+
+.filter-row select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+/* 表格 - 緊湊版 */
+.table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-top: 15px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 350px;
+}
+
+th, td {
+    padding: 10px 5px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+    white-space: nowrap;
+}
+
+th {
+    background: #f5f7fa;
+    color: #1a1a2e;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+td {
+    font-size: 0.85rem;
+}
+
+tr:hover {
+    background: #f8f9fa;
+}
+
+/* 狀態徽章 */
+.status-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+.status-unused {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-used {
+    background: #d4edda;
+    color: #155724;
+}
+
+/* 操作按鈕 */
+td:last-child {
+    display: flex;
+    gap: 4px;
+    justify-content: flex-end;
+}
+
+td:last-child .btn {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    min-width: 35px;
+}
+
+/* 總計摘要 */
+.total-summary {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.total-item {
+    flex: 1;
+    min-width: 140px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.total-item.highlight {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+}
+
+.total-label {
+    display: block;
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.total-value {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #1a1a2e;
+}
+
+.total-item.highlight .total-value {
+    color: #856404;
+}
+
+/* 總覽網格 */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.summary-card {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    padding: 12px;
+    transition: transform 0.3s ease;
+}
+
+.summary-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.summary-card h3 {
+    color: #1a1a2e;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.summary-stat {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    font-size: 0.8rem;
+}
+
+.summary-stat:last-child {
+    border-bottom: none;
+}
+
+.summary-stat .label {
+    color: #666;
+}
+
+.summary-stat .value {
+    font-weight: bold;
+    color: #1a1a2e;
+}
+
+.summary-stat .value.highlight {
+    color: #e74c3c;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal.active {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 350px;
+    position: relative;
+    animation: slideDown 0.3s ease;
+}
+
+.modal-small {
+    max-width: 300px;
+    text-align: center;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #999;
+}
+
+.close:hover {
+    color: #333;
+}
+
+.modal-content h2 {
+    margin-bottom: 10px;
+    color: #1a1a2e;
+}
+
+/* 確認對話框 */
+.confirm-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+#confirm-message {
+    color: #666;
+    margin: 15px 0;
+    font-size: 0.9rem;
+}
+
+/* 空狀態 */
+.empty-state {
+    text-align: center;
+    padding: 30px;
+    color: #999;
+    font-size: 0.9rem;
+}
+
+/* 響應式 - 手機版 */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+    
+    .login-box {
+        padding: 30px 20px;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .user-info {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .panel {
+        padding: 15px 10px;
+    }
+    
+    .coupon-form-grid {
+        flex-direction: column;
+    }
+    
+    .coupon-form-grid .platform-select,
+    .coupon-form-grid .form-group {
+        width: 100%;
+    }
+    
+    .coupon-form-grid .form-group input,
+    .coupon-form-grid .form-group select {
+        min-width: unset;
+    }
+    
+    .amount-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+    
+    .filter-row {
+        flex-direction: column;
+    }
+    
+    .filter-row select {
+        width: 100%;
+    }
+    
+    table {
+        font-size: 0.8rem;
+        min-width: 300px;
+    }
+    
+    th, td {
+        padding: 8px 3px;
+    }
+    
+    .status-badge {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+    }
+    
+    td:last-child .btn {
+        padding: 3px 6px;
+        font-size: 0.7rem;
+        min-width: 30px;
+    }
+    
+    .total-summary {
+        flex-direction: column;
+    }
+    
+    .total-item {
+        width: 100%;
+    }
+    
+    .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+}
+
+/* 小螢幕優化 */
+@media (max-width: 400px) {
+    .amount-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+}

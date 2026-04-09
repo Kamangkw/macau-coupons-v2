@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>澳門消費券記錄系統</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- 登入畫面 -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-box">
+            <h1>🪪 澳門消費券記錄系統</h1>
+            <p>請輸入你的名字開始使用</p>
+            <form id="login-form">
+                <input type="text" id="login-name" placeholder="輸入姓名" required>
+                <button type="submit" class="btn btn-primary">開始使用</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 主應用畫面 -->
+    <div id="app-screen" class="container" style="display: none;">
+        <header>
+            <div class="header-content">
+                <div>
+                    <h1>🪪 澳門消費券記錄系統</h1>
+                    <p class="subtitle">記錄你的消費券，輕鬆掌握每週消費需求</p>
+                </div>
+                <div class="user-info">
+                    <span id="user-name-display">用戶</span>
+                    <button class="btn btn-small" onclick="logout()">登出</button>
+                    <button class="btn btn-danger btn-small" onclick="confirmClearAll()">🗑️ 清零</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 抽獎記錄面板 -->
+        <section id="coupons-panel" class="panel active">
+            <!-- 可折疊的抽獎記錄區塊 -->
+            <div class="collapsible-section" id="lottery-section">
+                <div class="section-header" onclick="toggleSection('lottery')">
+                    <h2>🎰 抽獎記錄 <span class="toggle-icon" id="lottery-toggle">▼</span></h2>
+                </div>
+                
+                <div class="section-content" id="lottery-content">
+                    <p class="info-text">💡 週五/六/日消費滿50元可參與抽獎</p>
+                    
+                    <!-- 輸入表單 -->
+                    <form id="coupon-form">
+                        <div class="coupon-form-grid">
+                            <div class="form-group platform-select">
+                                <label>支付平臺：</label>
+                                <select id="coupon-platform" required>
+                                    <option value="">請選擇平臺</option>
+                                    {% for platform in platforms %}
+                                    <option value="{{ platform }}">{{ platform }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>抽獎日期：</label>
+                                <input type="date" id="coupon-date" required>
+                            </div>
+                        </div>
+                        
+                        <div class="amount-inputs">
+                            <label>券面額：</label>
+                            <div class="amount-grid">
+                                <div class="amount-entry">
+                                    <span>第1條</span>
+                                    <select class="coupon-amount" required>
+                                        <option value="">--</option>
+                                        {% for amount in coupon_amounts %}
+                                        <option value="{{ amount }}">{{ amount }}元</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="amount-entry">
+                                    <span>第2條</span>
+                                    <select class="coupon-amount" required>
+                                        <option value="">--</option>
+                                        {% for amount in coupon_amounts %}
+                                        <option value="{{ amount }}">{{ amount }}元</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="amount-entry">
+                                    <span>第3條</span>
+                                    <select class="coupon-amount" required>
+                                        <option value="">--</option>
+                                        {% for amount in coupon_amounts %}
+                                        <option value="{{ amount }}">{{ amount }}元</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-save">➕ 加入記錄</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- 兌換消費券摘要（在摺疊區塊外，永遠可見） -->
+            <h3 class="exchange-title" style="margin-top: 15px;">💰 兌換消費券:</h3>
+            
+            <!-- 篩選器（在摺疊區塊外，永遠可見） -->
+            <div class="filter-row">
+                <select id="filter-platform" onchange="loadCoupons()">
+                    <option value="">全部平臺</option>
+                    {% for platform in platforms %}
+                    <option value="{{ platform }}">{{ platform }}</option>
+                    {% endfor %}
+                </select>
+                <select id="filter-status" onchange="loadCoupons()">
+                    <option value="">全部狀態</option>
+                    <option value="unused">未使用</option>
+                    <option value="used">已使用</option>
+                </select>
+            </div>
+            
+            <!-- 表格（在摺疊區塊外，永遠可見） -->
+            <div class="table-container">
+                <table id="coupons-table">
+                    <thead>
+                        <tr>
+                            <th>平臺</th>
+                            <th>券</th>
+                            <th>日期</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="coupons-tbody">
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 總計摘要 -->
+            <div class="total-summary" id="total-summary">
+                <div class="total-item highlight">
+                    <span class="total-label">📌 未使用總額</span>
+                    <span class="total-value" id="total-unused">0 元</span>
+                </div>
+            </div>
+            
+            <!-- 各平臺統計摘要 -->
+            <h3 style="margin-top: 25px; color: #1a1a2e;">各平臺統計</h3>
+            <div class="summary-grid" id="summary-grid">
+            </div>
+            
+            <!-- 全澳抽獎趨勢 iframe -->
+            <h3 style="margin-top: 25px; color: #1a1a2e;">📊 全澳抽獎趨勢</h3>
+            <iframe
+                src="https://macau-rewards-2026.web.app/"
+                width="100%"
+                height="600"
+                style="border: 1px solid #ddd; border-radius: 8px;"
+                title="全澳抽獎趨勢"
+            ></iframe>
+        </section>
+    </div>
+
+    <!-- 確認 Modal -->
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content modal-small">
+            <span class="close" onclick="closeConfirmModal()">&times;</span>
+            <h2 id="confirm-title">確認操作</h2>
+            <p id="confirm-message">確定要執行此操作嗎？</p>
+            <div class="confirm-actions">
+                <button class="btn btn-secondary" onclick="closeConfirmModal()">取消</button>
+                <button class="btn btn-primary" id="confirm-btn">確定</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
