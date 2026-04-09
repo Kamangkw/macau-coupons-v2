@@ -14,6 +14,18 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('coupon-date').valueAsDate = macauTime;
 });
 
+// 打開平臺 App
+function openPlatformApp() {
+    const select = document.getElementById('coupon-platform');
+    const selectedOption = select.options[select.selectedIndex];
+    const link = selectedOption.getAttribute('data-link');
+    if (link) {
+        window.location.href = link;
+    } else {
+        alert('此平臺暫時不支援直接開啟 App');
+    }
+}
+
 // 處理平臺選擇 - 如果有 App Deep Link 就打開
 function handlePlatformSelect(select) {
     const selectedOption = select.options[select.selectedIndex];

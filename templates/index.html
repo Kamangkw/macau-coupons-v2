@@ -51,12 +51,13 @@
                         <div class="coupon-form-grid">
                             <div class="form-group platform-select">
                                 <label>支付平臺：</label>
-                                <select id="coupon-platform" required onchange="handlePlatformSelect(this)">
+                                <select id="coupon-platform" required>
                                     <option value="">請選擇平臺</option>
                                     {% for platform in platforms %}
-                                    <option value="{{ platform }}" data-link="{{ platform_links.get(platform, '') }}">{{ platform }}</option>
+                                    <option value="{{ platform }}" data-link="{{ platform_links.get(platform, '') }}">{{ platform }}{% if platform_links.get(platform) %} ⬆{% endif %}</option>
                                     {% endfor %}
                                 </select>
+                                <button type="button" class="btn btn-small btn-secondary" onclick="openPlatformApp()">📱 開啟 App</button>
                             </div>
                             <div class="form-group">
                                 <label>抽獎日期：</label>
