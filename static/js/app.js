@@ -14,6 +14,16 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('coupon-date').valueAsDate = macauTime;
 });
 
+// 處理平臺選擇 - 如果有 App Deep Link 就打開
+function handlePlatformSelect(select) {
+    const selectedOption = select.options[select.selectedIndex];
+    const link = selectedOption.getAttribute('data-link');
+    if (link) {
+        // 嘗試打開 App
+        window.location.href = link;
+    }
+}
+
 async function checkLoginStatus() {
     try {
         const response = await fetch('/api/current-user');

@@ -51,10 +51,10 @@
                         <div class="coupon-form-grid">
                             <div class="form-group platform-select">
                                 <label>支付平臺：</label>
-                                <select id="coupon-platform" required>
+                                <select id="coupon-platform" required onchange="handlePlatformSelect(this)">
                                     <option value="">請選擇平臺</option>
                                     {% for platform in platforms %}
-                                    <option value="{{ platform }}">{{ platform }}</option>
+                                    <option value="{{ platform }}" data-link="{{ platform_links.get(platform, '') }}">{{ platform }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
