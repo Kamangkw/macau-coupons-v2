@@ -4,23 +4,46 @@
 
 const API_BASE = '/api';
 
+let currentPage = 1;
+let totalPages = 1;
+
 document.addEventListener('DOMContentLoaded', () => {
     checkLoginStatus();
     document.getElementById('login-form').addEventListener('submit', handleLogin);
     document.getElementById('coupon-form').addEventListener('submit', handleCouponSubmit);
-    // 使用澳門/香港時區 (UTC+8)
     const now = new Date();
     const macauTime = new Date(now.toLocaleString('zh-TW', { timeZone: 'Asia/Hong_Kong' }));
     document.getElementById('coupon-date').valueAsDate = macauTime;
 });
 
-// 處理平臺選擇 - 如果有 App Deep Link 就打開
-function handlePlatformSelect(select) {
-    const selectedOption = select.options[select.selectedIndex];
-    const link = selectedOption.getAttribute('data-link');
-    if (link) {
-        // 嘗試打開 App
-        window.location.href = link;
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container') || createToastContainer();
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toast-container';
+    document.body.appendChild(container);
+    return container;
+}
+
+function setLoading(element, isLoading) {
+    if (isLoading) {
+        element.disabled = true;
+        element.dataset.originalText = element.textContent;
+        element.textContent = '載入中...';
+    } else {
+        element.disabled = false;
+        element.textContent = element.dataset.originalText || element.textContent;
     }
 }
 
@@ -87,10 +110,12 @@ async function toggleSection(section) {
 async function handleLogin(event) {
     event.preventDefault();
     const name = document.getElementById('login-name').value.trim();
+    const submitBtn = event.target.querySelector('button[type="submit"]');
     if (!name) {
-        alert('請輸入姓名');
+        showToast('請輸入姓名', 'error');
         return;
     }
+    setLoading(submitBtn, true);
     try {
         const response = await fetch('/login', {
             method: 'POST',
@@ -100,12 +125,15 @@ async function handleLogin(event) {
         if (response.ok) {
             const data = await response.json();
             showAppScreen(data.name);
+            showToast('登入成功');
         } else {
-            alert('登入失敗，請稍後再試');
+            showToast('登入失敗，請稍後再試', 'error');
         }
     } catch (error) {
         console.error('登入失敗:', error);
-        alert('登入失敗，請稍後再試');
+        showToast('登入失敗，請稍後再試', 'error');
+    } finally {
+        setLoading(submitBtn, false);
     }
 }
 
@@ -138,32 +166,44 @@ function renderSummary(data) {
     grid.innerHTML = '';
     document.getElementById('total-unused').textContent = data.total_unused + ' 元';
     data.platforms.forEach(item => {
-        const isUEpay = item.platform === 'UEpay';
         const card = document.createElement('div');
         card.className = 'summary-card';
-        card.innerHTML = '<h3>' + item.platform + (isUEpay ? ' 🗑️' : '') + '</h3>' +
+        card.innerHTML = '<h3>' + item.platform + '</h3>' +
             '<div class="summary-stat"><span class="label">總券額</span><span class="value">' + item.platform_total + ' 元</span></div>' +
             '<div class="summary-stat"><span class="label">未使用</span><span class="value highlight">' + item.total_coupon + ' 元</span></div>';
         grid.appendChild(card);
     });
 }
 
-async function loadCoupons() {
+async function loadCoupons(page = 1) {
+    const tbody = document.getElementById('coupons-tbody');
+    const platform = document.getElementById('filter-platform')?.value || '';
+    const status = document.getElementById('filter-status')?.value || '';
+    
+    tbody.innerHTML = '<tr><td colspan="4" class="loading-state">載入中...</td></tr>';
+    
     try {
-        const platform = document.getElementById('filter-platform')?.value || '';
-        const status = document.getElementById('filter-status')?.value || '';
-        const response = await fetch(API_BASE + '/coupons');
+        let url = API_BASE + '/coupons?page=' + page + '&per_page=20';
+        const response = await fetch(url);
         if (response.status === 401) {
             showLoginScreen();
             return;
         }
-        let data = await response.json();
+        const result = await response.json();
+        
+        currentPage = result.current_page;
+        totalPages = result.pages;
+        
+        let data = result.coupons;
         if (platform) data = data.filter(c => c.platform === platform);
         if (status === 'used') data = data.filter(c => c.is_used);
         else if (status === 'unused') data = data.filter(c => !c.is_used);
+        
         renderCoupons(data);
+        renderPagination();
     } catch (error) {
         console.error('載入優惠券失敗:', error);
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-state">載入失敗</td></tr>';
     }
 }
 
@@ -180,13 +220,35 @@ function renderCoupons(coupons) {
     ).join('');
 }
 
+function renderPagination() {
+    const pagination = document.getElementById('pagination');
+    if (!pagination) return;
+    
+    if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let html = '';
+    if (currentPage > 1) {
+        html += '<button class="btn btn-small" onclick="loadCoupons(' + (currentPage - 1) + ')">上一頁</button>';
+    }
+    html += '<span class="page-info">第 ' + currentPage + ' / ' + totalPages + ' 頁</span>';
+    if (currentPage < totalPages) {
+        html += '<button class="btn btn-small" onclick="loadCoupons(' + (currentPage + 1) + ')">下一頁</button>';
+    }
+    pagination.innerHTML = html;
+}
+
 async function handleCouponSubmit(event) {
     event.preventDefault();
     const platform = document.getElementById('coupon-platform').value;
     const date = document.getElementById('coupon-date').value;
     const amountEntries = document.querySelectorAll('.coupon-amount');
+    const submitBtn = event.target.querySelector('.btn-save');
+    
     if (!platform) {
-        alert('請選擇支付平臺');
+        showToast('請選擇支付平臺', 'error');
         return;
     }
     const coupons = [];
@@ -197,9 +259,11 @@ async function handleCouponSubmit(event) {
         }
     });
     if (coupons.length === 0) {
-        alert('請至少選擇一個券面額');
+        showToast('請至少選擇一個券面額', 'error');
         return;
     }
+    
+    setLoading(submitBtn, true);
     try {
         const response = await fetch(API_BASE + '/coupons', {
             method: 'POST',
@@ -207,21 +271,23 @@ async function handleCouponSubmit(event) {
             body: JSON.stringify({ coupons })
         });
         if (response.ok) {
-            alert('🎉 恭喜你！記錄已保存！');
+            showToast('🎉 記錄已保存！');
             document.getElementById('coupon-platform').value = '';
             amountEntries.forEach(entry => entry.value = '');
-            // 使用澳門/香港時區 (UTC+8)
             const now = new Date();
             const macauTime = new Date(now.toLocaleString('zh-TW', { timeZone: 'Asia/Hong_Kong' }));
             document.getElementById('coupon-date').valueAsDate = macauTime;
-            loadCoupons();
+            loadCoupons(currentPage);
             loadSummary();
         } else {
-            alert('新增失敗，請稍後再試');
+            const data = await response.json();
+            showToast(data.error || '新增失敗，請稍後再試', 'error');
         }
     } catch (error) {
         console.error('新增失敗:', error);
-        alert('新增失敗，請稍後再試');
+        showToast('新增失敗，請稍後再試', 'error');
+    } finally {
+        setLoading(submitBtn, false);
     }
 }
 
@@ -247,22 +313,43 @@ async function toggleCouponStatus(id, isUsed) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ is_used: isUsed })
         });
-        if (response.ok) { loadCoupons(); loadSummary(); }
-    } catch (error) { console.error('更新失敗:', error); }
+        if (response.ok) {
+            loadCoupons(currentPage);
+            loadSummary();
+            showToast(isUsed ? '已標記為已使用' : '已標記為未使用');
+        }
+    } catch (error) {
+        console.error('更新失敗:', error);
+        showToast('更新失敗', 'error');
+    }
 }
 
 async function deleteCoupon(id) {
     try {
         const response = await fetch(API_BASE + '/coupons/' + id, { method: 'DELETE' });
-        if (response.ok) { loadCoupons(); loadSummary(); }
-    } catch (error) { console.error('刪除失敗:', error); }
+        if (response.ok) {
+            loadCoupons(currentPage);
+            loadSummary();
+            showToast('已刪除');
+        }
+    } catch (error) {
+        console.error('刪除失敗:', error);
+        showToast('刪除失敗', 'error');
+    }
 }
 
 async function clearAllCoupons() {
     try {
         const response = await fetch(API_BASE + '/coupons/clear-all', { method: 'POST' });
-        if (response.ok) { loadCoupons(); loadSummary(); }
-    } catch (error) { console.error('清空失敗:', error); }
+        if (response.ok) {
+            loadCoupons(1);
+            loadSummary();
+            showToast('已清空所有記錄');
+        }
+    } catch (error) {
+        console.error('清空失敗:', error);
+        showToast('清空失敗', 'error');
+    }
 }
 
 function formatDateShort(dateStr) {
