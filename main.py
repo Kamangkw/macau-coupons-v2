@@ -46,6 +46,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False, unique=True)
     form_collapsed = db.Column(db.Boolean, default=False)
+    trends_collapsed = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     coupons = db.relationship("Coupon", backref="user", lazy=True)
@@ -92,6 +93,22 @@ class Coupon(db.Model):
 @app.before_request
 def ensure_db():
     db.create_all()
+    try:
+        result = db.session.execute(db.text("PRAGMA table_info(users)")).fetchall()
+        columns = [r[1] for r in result]
+        if "form_collapsed" not in columns:
+            db.session.execute(
+                db.text("ALTER TABLE users ADD COLUMN form_collapsed BOOLEAN DEFAULT 0")
+            )
+        if "trends_collapsed" not in columns:
+            db.session.execute(
+                db.text(
+                    "ALTER TABLE users ADD COLUMN trends_collapsed BOOLEAN DEFAULT 0"
+                )
+            )
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 
 @app.errorhandler(400)
@@ -175,7 +192,12 @@ def get_user_settings():
         return jsonify({"error": "用戶不存在"}), 404
 
     return jsonify(
-        {"form_collapsed": user.form_collapsed if user.form_collapsed else False}
+        {
+            "form_collapsed": user.form_collapsed if user.form_collapsed else False,
+            "trends_collapsed": user.trends_collapsed
+            if hasattr(user, "trends_collapsed") and user.trends_collapsed
+            else False,
+        }
     )
 
 
@@ -193,6 +215,8 @@ def update_user_settings():
 
     if "form_collapsed" in data:
         user.form_collapsed = data["form_collapsed"]
+    if "trends_collapsed" in data:
+        user.trends_collapsed = data["trends_collapsed"]
     db.session.commit()
     return jsonify({"message": "設置已保存"})
 
@@ -206,6 +230,7 @@ def get_coupons():
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 20, type=int)
     per_page = min(per_page, 100)
+    per_page = 25
 
     pagination = (
         Coupon.query.filter_by(user_id=user_id)

@@ -84,6 +84,10 @@ async function loadSectionState() {
                 document.getElementById('lottery-content').classList.add('collapsed');
                 document.getElementById('lottery-toggle').textContent = '▶';
             }
+            if (data.trends_collapsed) {
+                document.getElementById('trends-content').classList.add('collapsed');
+                document.getElementById('trends-toggle').textContent = '▶';
+            }
         }
     } catch (error) {
         console.error('載入狀態失敗:', error);
@@ -168,7 +172,7 @@ function renderSummary(data) {
     data.platforms.forEach(item => {
         const card = document.createElement('div');
         card.className = 'summary-card';
-        card.innerHTML = '<h3>' + item.platform + '</h3>' +
+        card.innerHTML = '<h3>' + item.platform + (item.platform === 'UEpay' ? ' 🗑️' : '') + '</h3>' +
             '<div class="summary-stat"><span class="label">總券額</span><span class="value">' + item.platform_total + ' 元</span></div>' +
             '<div class="summary-stat"><span class="label">未使用</span><span class="value highlight">' + item.total_coupon + ' 元</span></div>';
         grid.appendChild(card);
