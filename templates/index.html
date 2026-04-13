@@ -183,23 +183,21 @@
         </div>
     </div>
 
-    <!-- AI 聊天助手（登入後才顯示） -->
-    <div id="chat-widget" class="chat-widget collapsed" style="display: none;">
+    <!-- AI 聊天助手 -->
+    <div id="chat-widget" class="chat-widget collapsed" style="display:none">
         <div class="chat-header" onclick="toggleChat()">
-            <span>💬 AI 助手</span>
+            <span>💬 AI</span>
             <span id="chat-toggle-icon">▲</span>
         </div>
-        <div class="chat-body" id="chat-body">
+        <div class="chat-body">
             <div class="chat-messages" id="chat-messages">
-                <div class="chat-message bot">
-                    <div class="message-content">
-                        你好！我是 AI 助手，可以幫你解答關於澳門消費券的問題，例如：如何使用消費券、怎麼計算最低消費、哪些平臺可以使用等。
-                    </div>
+                <div class="chat-bubble bot">
+                    你好！輸入消費金額，我幫你建議如何使用券。
                 </div>
             </div>
-            <div class="chat-input-area">
-                <textarea id="chat-input" placeholder="輸入問題..." rows="1" onkeypress="handleChatKeypress(event)"></textarea>
-                <button onclick="sendChatMessage()">送出</button>
+            <div class="chat-input-row">
+                <textarea id="chat-input" rows="1" placeholder="消費金額..."></textarea>
+                <button onclick="sendChatMessage()">▶</button>
             </div>
             <div class="chat-status" id="chat-status"></div>
         </div>

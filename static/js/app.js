@@ -389,14 +389,12 @@ async function sendChatMessage() {
     const messagesContainer = document.getElementById('chat-messages');
     const sendBtn = input.nextElementSibling;
     
-    messagesContainer.innerHTML += '<div class="chat-message user"><div class="message-content">' + escapeHtml(message) + '</div></div>';
+    messagesContainer.innerHTML += '<div class="chat-bubble user">' + escapeHtml(message) + '</div>';
     input.value = '';
     sendBtn.disabled = true;
     
     const statusDiv = document.getElementById('chat-status');
-    statusDiv.textContent = 'AI 正在思考...';
-    statusDiv.className = 'chat-status';
-    
+    statusDiv.textContent = '思考中...';
     scrollChat();
     
     try {
@@ -409,40 +407,20 @@ async function sendChatMessage() {
         const data = await response.json();
         
         if (response.ok) {
-            messagesContainer.innerHTML += '<div class="chat-message bot"><div class="message-content">' + escapeHtml(data.reply) + '</div></div>';
+            messagesContainer.innerHTML += '<div class="chat-bubble bot">' + escapeHtml(data.reply) + '</div>';
             statusDiv.textContent = '';
-            addQuickQuestions();
         } else {
-            messagesContainer.innerHTML += '<div class="chat-message bot"><div class="message-content">❌ 抱歉，發生錯誤：' + data.error + '</div></div>';
+            messagesContainer.innerHTML += '<div class="chat-bubble bot">錯誤：' + data.error + '</div>';
             statusDiv.textContent = '';
         }
     } catch (error) {
         console.error('Chat error:', error);
-        messagesContainer.innerHTML += '<div class="chat-message bot"><div class="message-content">❌ 網絡錯誤，請稍後再試</div></div>';
+        messagesContainer.innerHTML += '<div class="chat-bubble bot">網絡錯誤</div>';
         statusDiv.textContent = '';
     } finally {
         sendBtn.disabled = false;
         scrollChat();
     }
-}
-
-function addQuickQuestions() {
-    const statusDiv = document.getElementById('chat-status');
-    const questions = [
-        { text: '如何使用消費券？', q: '如何使用消費券？最低消費是多少？' },
-        { text: '哪些平臺可用？', q: '哪些支付平臺可以使用消費券？' },
-        { text: '什麼時候可以抽獎？', q: '什麼時候可以參與抽獎？' },
-        { text: '消費券有效期？', q: '消費券有有效期嗎？什麼時候到期？' }
-    ];
-    statusDiv.className = 'chat-status suggestions';
-    statusDiv.innerHTML = questions.map(q => 
-        '<button class="quick-question" onclick="askQuestion(\'' + q.q.replace(/'/g, "\\'") + '\')">' + q.text + '</button>'
-    ).join('');
-}
-
-function askQuestion(question) {
-    document.getElementById('chat-input').value = question;
-    sendChatMessage();
 }
 
 function scrollChat() {
@@ -453,7 +431,7 @@ function scrollChat() {
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
-    return div.innerHTML.replace(/\n/g, '<br>');
+    return div.innerHTML;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
