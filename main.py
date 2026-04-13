@@ -417,23 +417,29 @@ def chat_message():
 
     user_data_text = ""
     if summary:
-        user_data_text = "【用戶目前的券資料】\n"
-        for s in summary:
-            user_data_text += f"- {s['平臺']}: 未使用 {s['未使用券數']} 張，總額 {s['未使用總額']} 元\n"
+        total_unused = sum(s["未使用總額"] for s in summary)
+        user_data_text = f"【用戶未使用券總額】{total_unused} 元"
     else:
-        user_data_text = "【用戶目前的券資料】\n目前沒有任何券記錄。"
+        user_data_text = "【用戶未使用券總額】0 元（目前沒有任何券記錄）"
 
-    system_prompt = """你是一個專門為澳門消費券記錄系統提供幫助的 AI 助手。
+    system_prompt = """你是一個澳門消費券使用顧問，請用繁體中文回答。
 
-澳門消費券系統的背景知識：
-- 消費券由澳門政府發放
-- 週五/六/日消費滿50元可參與抽獎
-- 券面額有：0元、10元、20元、50元、100元、200元
-- 使用規則：使用時需消費該券面額3倍的金額（例如：10元券需消費30元，實付20元）
-- 支付平臺包括：工商銀行、國際銀行、支付寶、大豐銀行、UEpay、廣發銀行、Mpay、中國銀行
-- 只能在週一至週四使用消費券
+回答規則：
+1. 簡潔回覆，不要列出具體券的詳細資料
+2. 優先建議使用單一平臺一次過數碼支付
+3. 只有當單一平臺的未使用券不足以支付時，才考慮跨平臺組合
+4. 當用戶輸入消費金額時，必須列出計算公式
 
-請用繁體中文回答用戶的問題。如果用戶問的是與消費券或記錄系統無關的問題，請禮貌地引導他們詢問相關問題。
+計算公式：
+- 券的面額 × 3 = 最低消費要求
+- 最低消費 - 券面額 = 實付金額
+
+例如：
+消費 90 元，使用 1 張 20 元券：
+公式：90 - 20 = 70 元（實付）
+
+消費 180 元，使用 2 張 50 元券：
+公式：(180 - 50) + (180 - 50) = 260 元（實付）
 
 """
 
@@ -442,8 +448,8 @@ def chat_message():
             model="command-a-03-2025",
             message=user_message,
             preamble=system_prompt + user_data_text,
-            temperature=0.7,
-            max_tokens=500,
+            temperature=0.3,
+            max_tokens=300,
         )
         return jsonify({"reply": response.text})
     except Exception as e:
