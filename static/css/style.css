@@ -955,9 +955,10 @@ td:last-child .btn {
     padding: 10px 14px;
     border-radius: 12px;
     font-size: 0.85rem;
-    line-height: 1.4;
+    line-height: 1.5;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    white-space: pre-wrap;
     max-width: 100%;
 }
 
