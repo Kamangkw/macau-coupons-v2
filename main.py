@@ -9,7 +9,6 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, date, timezone
 from functools import wraps
 import secrets
-import cohere
 
 app = Flask(__name__)
 
@@ -39,11 +38,6 @@ PLATFORMS = [
 ]
 
 COUPON_AMOUNTS = [0, 10, 20, 50, 100, 200]
-
-COHERE_API_KEY = (
-    os.environ.get("COHERE_API_KEY") or "4nNktaIlQ9LTcnvHmF6eHqJbJap8vWakesnrqS8H"
-)
-cohere_client = cohere.Client(COHERE_API_KEY)
 
 
 class User(db.Model):
@@ -371,99 +365,6 @@ def get_summary():
         )
 
     return jsonify({"platforms": summary, "total_unused": total_unused})
-
-
-@app.route("/api/chat/status", methods=["GET"])
-def chat_status():
-    return jsonify({"enabled": cohere_client is not None})
-
-
-@app.route("/api/chat/message", methods=["POST"])
-def chat_message():
-    user_id = get_user_id()
-    if not user_id:
-        return jsonify({"error": "請先登入"}), 401
-
-    data = request.get_json()
-    user_message = data.get("message", "").strip()
-
-    if not user_message:
-        return jsonify({"error": "請輸入訊息"}), 400
-
-    summary = []
-    for platform in PLATFORMS:
-        result = (
-            db.session.query(
-                db.func.sum(
-                    db.case((Coupon.is_used == False, Coupon.amount), else_=0)
-                ).label("unused_total"),
-                db.func.count(db.case((Coupon.is_used == False, 1))).label(
-                    "unused_count"
-                ),
-            )
-            .filter(Coupon.user_id == user_id, Coupon.platform == platform)
-            .first()
-        )
-        unused_count = result.unused_count or 0
-        unused_total = result.unused_total or 0
-        if unused_count > 0:
-            summary.append(
-                {
-                    "平臺": platform,
-                    "未使用券數": unused_count,
-                    "未使用總額": unused_total,
-                }
-            )
-
-    user_data_text = ""
-    if summary:
-        user_data_text = "【用戶各平臺未使用券】\n"
-        for s in summary:
-            user_data_text += (
-                f"- {s['平臺']}: {s['未使用券數']}張，共{s['未使用總額']}元\n"
-            )
-        total_unused = sum(s["未使用總額"] for s in summary)
-        user_data_text += f"\n未使用券總額：{total_unused} 元"
-    else:
-        user_data_text = "【用戶各平臺未使用券】\n目前沒有任何券記錄。"
-
-    system_prompt = """你是一個澳門消費券使用顧問。
-
-回答格式（必須完全遵守）：
-消費XXX元：
-[平臺]: 消費YYY元 (扣ZZZ券)
-共扣NNN券
-需額外支付：XXX元
-
-規則：
-- 券面額只有：0元、10元、20元、50元、100元、200元
-- 消費金額必須 ≥ 券面額×3
-- 優先用單一平臺
-
-例子：
-消費1000元：
-中國銀行: 消費600元 (扣200券)
-國際銀行: 消費150元 (扣50券)
-共扣250券
-需額外支付：750元
-"""
-
-    try:
-        response = cohere_client.chat(
-            model="command-a-03-2025",
-            message=user_message,
-            preamble=system_prompt + user_data_text,
-            temperature=0.05,
-            max_tokens=120,
-        )
-        return jsonify({"reply": response.text})
-    except Exception as e:
-        error_msg = str(e)
-        if "image" in error_msg.lower() or "vision" in error_msg.lower():
-            return jsonify(
-                {"error": "抱歉，此 AI 模型不支援圖片輸入，請改用文字提問。"}
-            ), 500
-        return jsonify({"error": f"AI 回應失敗：{error_msg}"}), 500
 
 
 if __name__ == "__main__":

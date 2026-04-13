@@ -381,59 +381,6 @@ function handleChatKeypress(event) {
     }
 }
 
-async function sendChatMessage() {
-    const input = document.getElementById('chat-input');
-    const message = input.value.trim();
-    if (!message) return;
-    
-    const messagesContainer = document.getElementById('chat-messages');
-    const sendBtn = input.nextElementSibling;
-    
-    messagesContainer.innerHTML += '<div class="chat-bubble user">' + escapeHtml(message) + '</div>';
-    input.value = '';
-    sendBtn.disabled = true;
-    
-    const statusDiv = document.getElementById('chat-status');
-    statusDiv.textContent = '思考中...';
-    scrollChat();
-    
-    try {
-        const response = await fetch(API_BASE + '/chat/message', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            messagesContainer.innerHTML += '<div class="chat-bubble bot">' + escapeHtml(data.reply) + '</div>';
-            statusDiv.textContent = '';
-        } else {
-            messagesContainer.innerHTML += '<div class="chat-bubble bot">錯誤：' + data.error + '</div>';
-            statusDiv.textContent = '';
-        }
-    } catch (error) {
-        console.error('Chat error:', error);
-        messagesContainer.innerHTML += '<div class="chat-bubble bot">網絡錯誤</div>';
-        statusDiv.textContent = '';
-    } finally {
-        sendBtn.disabled = false;
-        scrollChat();
-    }
-}
-
-function scrollChat() {
-    const messagesContainer = document.getElementById('chat-messages');
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     checkLoginStatus();
     document.getElementById('login-form').addEventListener('submit', handleLogin);

@@ -695,7 +695,6 @@ td:last-child .btn {
     background: linear-gradient(135deg, #e74c3c, #c0392b);
 }
 
-/* Loading State */
 .loading-state {
     text-align: center;
     padding: 30px;

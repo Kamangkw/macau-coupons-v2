@@ -139,30 +139,11 @@ from main import app as application
 
 ```bash
 cd Desktop\git\macau-coupons-v2
-pip install Flask Flask-SQLAlchemy cohere
+pip install Flask Flask-SQLAlchemy
 python main.py
 ```
 
 然後打開瀏覽器：http://localhost:5000
-
----
-
-## 💬 AI 助手功能
-
-系統內建 AI 助手，可以回答關於澳門消費券的問題。
-
-### 使用方式
-
-1. 點擊右下角的 💬 AI 助手按鈕
-2. 直接輸入問題即可
-
-### AI 可回答的問題
-
-- 如何使用消費券？
-- 最低消費是多少？
-- 哪些支付平臺可以使用？
-- 什麼時候可以抽獎？
-- 消費券有效期？
 
 ---
 
@@ -193,4 +174,3 @@ A: 修改本地代碼 → GitHub → PythonAnywhere Bash → `git pull`
 - **後端**：Flask (Python)
 - **資料庫**：SQLite
 - **前端**：HTML5 + CSS3 + JavaScript
-- **AI**：Cohere (command-r-plus)
