@@ -900,20 +900,91 @@ td:last-child .btn {
     color: white;
 }
 
-/* Mobile responsive for chat */
-@media (max-width: 768px) {
-    .chat-widget {
-        right: 0;
-        left: 0;
-        width: 100%;
-        border-radius: 16px 16px 0 0;
-    }
-    
-    .chat-widget.collapsed {
-        width: 100%;
-    }
-    
-    .chat-body {
-        height: 400px;
-    }
+/* Mobile responsive for chat - iPhone fix */
+.chat-widget {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    max-width: 100vw;
+    background: white;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 999;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.chat-widget.collapsed {
+    width: 100%;
+}
+
+.chat-body {
+    height: 350px;
+    display: flex;
+    flex-direction: column;
+    background: #f5f7fa;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.chat-widget.collapsed .chat-body {
+    display: none;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-x: hidden;
+}
+
+.chat-message {
+    display: flex;
+    max-width: 85%;
+    overflow-x: hidden;
+}
+
+.chat-message .message-content {
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+}
+
+.chat-input-area {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    background: white;
+    border-top: 1px solid #e0e0e0;
+    align-items: flex-end;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.chat-input-area textarea {
+    flex: 1;
+    padding: 10px 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 20px;
+    font-size: 1rem;
+    font-family: inherit;
+    outline: none;
+    resize: none;
+    overflow-y: auto;
+    max-height: 80px;
+    word-wrap: break-word;
+    line-height: 1.4;
+    transition: border-color 0.3s ease;
+    max-width: calc(100% - 60px);
 }
