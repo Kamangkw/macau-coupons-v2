@@ -183,6 +183,28 @@
         </div>
     </div>
 
+    <!-- AI 聊天助手 -->
+    <div id="chat-widget" class="chat-widget collapsed">
+        <div class="chat-header" onclick="toggleChat()">
+            <span>💬 AI 助手</span>
+            <span id="chat-toggle-icon">▲</span>
+        </div>
+        <div class="chat-body" id="chat-body">
+            <div class="chat-messages" id="chat-messages">
+                <div class="chat-message bot">
+                    <div class="message-content">
+                        你好！我是 AI 助手，可以幫你解答關於澳門消費券的問題，例如：如何使用消費券、怎麼計算最低消費、哪些平臺可以使用等。
+                    </div>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="輸入問題..." onkeypress="handleChatKeypress(event)">
+                <button onclick="sendChatMessage()">送出</button>
+            </div>
+            <div class="chat-status" id="chat-status"></div>
+        </div>
+    </div>
+
     <script src="/static/js/app.js"></script>
 </body>
 </html>

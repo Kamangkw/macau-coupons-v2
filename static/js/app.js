@@ -360,3 +360,105 @@ function formatDateShort(dateStr) {
     const date = new Date(dateStr);
     return date.toLocaleDateString('zh-TW', { month: '2-digit', day: '2-digit' });
 }
+
+function toggleChat() {
+    const widget = document.getElementById('chat-widget');
+    const icon = document.getElementById('chat-toggle-icon');
+    widget.classList.toggle('collapsed');
+    if (widget.classList.contains('collapsed')) {
+        icon.textContent = '▲';
+    } else {
+        icon.textContent = '▼';
+    }
+}
+
+function handleChatKeypress(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendChatMessage();
+    }
+}
+
+async function sendChatMessage() {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    if (!message) return;
+    
+    const messagesContainer = document.getElementById('chat-messages');
+    const sendBtn = input.nextElementSibling;
+    
+    messagesContainer.innerHTML += '<div class="chat-message user"><div class="message-content">' + escapeHtml(message) + '</div></div>';
+    input.value = '';
+    sendBtn.disabled = true;
+    
+    const statusDiv = document.getElementById('chat-status');
+    statusDiv.textContent = 'AI 正在思考...';
+    statusDiv.className = 'chat-status';
+    
+    scrollChat();
+    
+    try {
+        const response = await fetch(API_BASE + '/chat/message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            messagesContainer.innerHTML += '<div class="chat-message bot"><div class="message-content">' + escapeHtml(data.reply) + '</div></div>';
+            statusDiv.textContent = '';
+            addQuickQuestions();
+        } else {
+            messagesContainer.innerHTML += '<div class="chat-message bot"><div class="message-content">❌ 抱歉，發生錯誤：' + data.error + '</div></div>';
+            statusDiv.textContent = '';
+        }
+    } catch (error) {
+        console.error('Chat error:', error);
+        messagesContainer.innerHTML += '<div class="chat-message bot"><div class="message-content">❌ 網絡錯誤，請稍後再試</div></div>';
+        statusDiv.textContent = '';
+    } finally {
+        sendBtn.disabled = false;
+        scrollChat();
+    }
+}
+
+function addQuickQuestions() {
+    const statusDiv = document.getElementById('chat-status');
+    const questions = [
+        { text: '如何使用消費券？', q: '如何使用消費券？最低消費是多少？' },
+        { text: '哪些平臺可用？', q: '哪些支付平臺可以使用消費券？' },
+        { text: '什麼時候可以抽獎？', q: '什麼時候可以參與抽獎？' },
+        { text: '消費券有效期？', q: '消費券有有效期嗎？什麼時候到期？' }
+    ];
+    statusDiv.className = 'chat-status suggestions';
+    statusDiv.innerHTML = questions.map(q => 
+        '<button class="quick-question" onclick="askQuestion(\'' + q.q.replace(/'/g, "\\'") + '\')">' + q.text + '</button>'
+    ).join('');
+}
+
+function askQuestion(question) {
+    document.getElementById('chat-input').value = question;
+    sendChatMessage();
+}
+
+function scrollChat() {
+    const messagesContainer = document.getElementById('chat-messages');
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML.replace(/\n/g, '<br>');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    checkLoginStatus();
+    document.getElementById('login-form').addEventListener('submit', handleLogin);
+    document.getElementById('coupon-form').addEventListener('submit', handleCouponSubmit);
+    const now = new Date();
+    const macauTime = new Date(now.toLocaleString('zh-TW', { timeZone: 'Asia/Hong_Kong' }));
+    document.getElementById('coupon-date').valueAsDate = macauTime;
+});

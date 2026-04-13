@@ -9,6 +9,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, date, timezone
 from functools import wraps
 import secrets
+import cohere
 
 app = Flask(__name__)
 
@@ -38,6 +39,11 @@ PLATFORMS = [
 ]
 
 COUPON_AMOUNTS = [0, 10, 20, 50, 100, 200]
+
+COHERE_API_KEY = (
+    os.environ.get("COHERE_API_KEY") or "4nNktaIlQ9LTcnvHmF6eHqJbJap8vWakesnrqS8H"
+)
+cohere_client = cohere.Client(COHERE_API_KEY)
 
 
 class User(db.Model):
@@ -365,6 +371,83 @@ def get_summary():
         )
 
     return jsonify({"platforms": summary, "total_unused": total_unused})
+
+
+@app.route("/api/chat/status", methods=["GET"])
+def chat_status():
+    return jsonify({"enabled": cohere_client is not None})
+
+
+@app.route("/api/chat/message", methods=["POST"])
+def chat_message():
+    user_id = get_user_id()
+    if not user_id:
+        return jsonify({"error": "請先登入"}), 401
+
+    data = request.get_json()
+    user_message = data.get("message", "").strip()
+
+    if not user_message:
+        return jsonify({"error": "請輸入訊息"}), 400
+
+    summary = []
+    for platform in PLATFORMS:
+        result = (
+            db.session.query(
+                db.func.sum(Coupon.amount).label("total_coupon"),
+                db.func.count(db.case((Coupon.is_used == False, 1))).label(
+                    "unused_count"
+                ),
+                db.func.count(db.case((Coupon.is_used == True, 1))).label("used_count"),
+            )
+            .filter(Coupon.user_id == user_id, Coupon.platform == platform)
+            .first()
+        )
+        unused = result.unused_count or 0
+        total = result.total_coupon or 0
+        if unused > 0 or total > 0:
+            summary.append(
+                {"平臺": platform, "未使用券數": unused, "未使用總額": total}
+            )
+
+    user_data_text = ""
+    if summary:
+        user_data_text = "【用戶目前的券資料】\n"
+        for s in summary:
+            user_data_text += f"- {s['平臺']}: 未使用 {s['未使用券數']} 張，總額 {s['未使用總額']} 元\n"
+    else:
+        user_data_text = "【用戶目前的券資料】\n目前沒有任何券記錄。"
+
+    system_prompt = """你是一個專門為澳門消費券記錄系統提供幫助的 AI 助手。
+
+澳門消費券系統的背景知識：
+- 消費券由澳門政府發放
+- 週五/六/日消費滿50元可參與抽獎
+- 券面額有：0元、10元、20元、50元、100元、200元
+- 使用規則：使用時需消費該券面額3倍的金額（例如：10元券需消費30元，實付20元）
+- 支付平臺包括：工商銀行、國際銀行、支付寶、大豐銀行、UEpay、廣發銀行、Mpay、中國銀行
+- 只能在週一至週四使用消費券
+
+請用繁體中文回答用戶的問題。如果用戶問的是與消費券或記錄系統無關的問題，請禮貌地引導他們詢問相關問題。
+
+"""
+
+    try:
+        response = cohere_client.chat(
+            model="command-a-03-2025",
+            message=user_message,
+            preamble=system_prompt + user_data_text,
+            temperature=0.7,
+            max_tokens=500,
+        )
+        return jsonify({"reply": response.text})
+    except Exception as e:
+        error_msg = str(e)
+        if "image" in error_msg.lower() or "vision" in error_msg.lower():
+            return jsonify(
+                {"error": "抱歉，此 AI 模型不支援圖片輸入，請改用文字提問。"}
+            ), 500
+        return jsonify({"error": f"AI 回應失敗：{error_msg}"}), 500
 
 
 if __name__ == "__main__":
