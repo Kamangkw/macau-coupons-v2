@@ -64,14 +64,12 @@ async function checkLoginStatus() {
 function showLoginScreen() {
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('app-screen').style.display = 'none';
-    document.getElementById('chat-widget').style.display = 'none';
 }
 
 function showAppScreen(userName) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
     document.getElementById('user-name-display').textContent = userName;
-    document.getElementById('chat-widget').style.display = 'block';
     loadSummary();
     loadCoupons();
     loadSectionState();
@@ -362,30 +360,3 @@ function formatDateShort(dateStr) {
     const date = new Date(dateStr);
     return date.toLocaleDateString('zh-TW', { month: '2-digit', day: '2-digit' });
 }
-
-function toggleChat() {
-    const widget = document.getElementById('chat-widget');
-    const icon = document.getElementById('chat-toggle-icon');
-    widget.classList.toggle('collapsed');
-    if (widget.classList.contains('collapsed')) {
-        icon.textContent = '▲';
-    } else {
-        icon.textContent = '▼';
-    }
-}
-
-function handleChatKeypress(event) {
-    if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        sendChatMessage();
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    checkLoginStatus();
-    document.getElementById('login-form').addEventListener('submit', handleLogin);
-    document.getElementById('coupon-form').addEventListener('submit', handleCouponSubmit);
-    const now = new Date();
-    const macauTime = new Date(now.toLocaleString('zh-TW', { timeZone: 'Asia/Hong_Kong' }));
-    document.getElementById('coupon-date').valueAsDate = macauTime;
-});
