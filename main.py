@@ -394,20 +394,25 @@ def chat_message():
     for platform in PLATFORMS:
         result = (
             db.session.query(
-                db.func.sum(Coupon.amount).label("total_coupon"),
+                db.func.sum(
+                    db.case((Coupon.is_used == False, Coupon.amount), else_=0)
+                ).label("unused_total"),
                 db.func.count(db.case((Coupon.is_used == False, 1))).label(
                     "unused_count"
                 ),
-                db.func.count(db.case((Coupon.is_used == True, 1))).label("used_count"),
             )
             .filter(Coupon.user_id == user_id, Coupon.platform == platform)
             .first()
         )
-        unused = result.unused_count or 0
-        total = result.total_coupon or 0
-        if unused > 0 or total > 0:
+        unused_count = result.unused_count or 0
+        unused_total = result.unused_total or 0
+        if unused_count > 0:
             summary.append(
-                {"平臺": platform, "未使用券數": unused, "未使用總額": total}
+                {
+                    "平臺": platform,
+                    "未使用券數": unused_count,
+                    "未使用總額": unused_total,
+                }
             )
 
     user_data_text = ""
