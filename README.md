@@ -81,7 +81,7 @@ cd macau-coupons
 
 在 Bash 輸入：
 ```bash
-pip install --user Flask Flask-SQLAlchemy cohere
+pip install --user Flask Flask-SQLAlchemy
 ```
 
 ### 第七步：設置 Web 應用

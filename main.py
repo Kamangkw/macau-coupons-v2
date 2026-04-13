@@ -228,8 +228,6 @@ def get_coupons():
         return jsonify({"error": "請先登入"}), 401
 
     page = request.args.get("page", 1, type=int)
-    per_page = request.args.get("per_page", 20, type=int)
-    per_page = min(per_page, 100)
     per_page = 25
 
     pagination = (
@@ -331,36 +329,28 @@ def get_summary():
     for platform in PLATFORMS:
         result = (
             db.session.query(
-                db.func.sum(Coupon.amount).label("total_coupon"),
+                db.func.sum(Coupon.amount).label("total_amount"),
                 db.func.count(db.case((Coupon.is_used == False, 1))).label(
                     "unused_count"
                 ),
                 db.func.count(db.case((Coupon.is_used == True, 1))).label("used_count"),
-                db.func.sum(
-                    db.case((Coupon.is_used == False, Coupon.amount), else_=0)
-                ).label("unused_total"),
             )
             .filter(Coupon.user_id == user_id, Coupon.platform == platform)
             .first()
         )
 
-        unused_total = result.unused_total or 0
-        used_count = result.used_count or 0
-        unused_count = result.unused_count or 0
-        total_count = used_count + unused_count
-
+        unused_total = result.total_amount or 0 if result.unused_count > 0 else 0
+        used_total = (result.total_amount or 0) - unused_total
         total_unused += unused_total
 
         summary.append(
             {
                 "platform": platform,
                 "total_coupon": unused_total,
-                "platform_total": (result.unused_total or 0)
-                + (result.total_coupon or 0)
-                - unused_total,
-                "used_count": used_count,
-                "unused_count": unused_count,
-                "total_count": total_count,
+                "platform_total": used_total,
+                "used_count": result.used_count or 0,
+                "unused_count": result.unused_count or 0,
+                "total_count": (result.used_count or 0) + (result.unused_count or 0),
             }
         )
 
