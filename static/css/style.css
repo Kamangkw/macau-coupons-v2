@@ -821,19 +821,26 @@ td:last-child .btn {
     padding: 12px;
     background: white;
     border-top: 1px solid #e0e0e0;
+    align-items: flex-end;
 }
 
-.chat-input-area input {
+.chat-input-area textarea {
     flex: 1;
     padding: 10px 14px;
     border: 2px solid #e0e0e0;
     border-radius: 20px;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    font-family: inherit;
     outline: none;
+    resize: none;
+    overflow-y: auto;
+    max-height: 80px;
+    word-wrap: break-word;
+    line-height: 1.4;
     transition: border-color 0.3s ease;
 }
 
-.chat-input-area input:focus {
+.chat-input-area textarea:focus {
     border-color: #667eea;
 }
 
@@ -894,13 +901,19 @@ td:last-child .btn {
 }
 
 /* Mobile responsive for chat */
-@media (max-width: 400px) {
+@media (max-width: 768px) {
     .chat-widget {
-        right: 10px;
-        width: calc(100% - 20px);
+        right: 0;
+        left: 0;
+        width: 100%;
+        border-radius: 16px 16px 0 0;
     }
     
     .chat-widget.collapsed {
-        width: calc(100% - 20px);
+        width: 100%;
+    }
+    
+    .chat-body {
+        height: 400px;
     }
 }

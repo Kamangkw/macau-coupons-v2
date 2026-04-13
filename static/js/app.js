@@ -64,12 +64,14 @@ async function checkLoginStatus() {
 function showLoginScreen() {
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('app-screen').style.display = 'none';
+    document.getElementById('chat-widget').style.display = 'none';
 }
 
 function showAppScreen(userName) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
     document.getElementById('user-name-display').textContent = userName;
+    document.getElementById('chat-widget').style.display = 'block';
     loadSummary();
     loadCoupons();
     loadSectionState();

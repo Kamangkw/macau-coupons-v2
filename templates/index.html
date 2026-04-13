@@ -183,8 +183,8 @@
         </div>
     </div>
 
-    <!-- AI 聊天助手 -->
-    <div id="chat-widget" class="chat-widget collapsed">
+    <!-- AI 聊天助手（登入後才顯示） -->
+    <div id="chat-widget" class="chat-widget collapsed" style="display: none;">
         <div class="chat-header" onclick="toggleChat()">
             <span>💬 AI 助手</span>
             <span id="chat-toggle-icon">▲</span>
@@ -198,7 +198,7 @@
                 </div>
             </div>
             <div class="chat-input-area">
-                <input type="text" id="chat-input" placeholder="輸入問題..." onkeypress="handleChatKeypress(event)">
+                <textarea id="chat-input" placeholder="輸入問題..." rows="1" onkeypress="handleChatKeypress(event)"></textarea>
                 <button onclick="sendChatMessage()">送出</button>
             </div>
             <div class="chat-status" id="chat-status"></div>
