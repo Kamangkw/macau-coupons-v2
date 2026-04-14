@@ -102,47 +102,15 @@
                 </div>
             </div>
             
-            <!-- 總計摘要 + 各平臺統計 -->
+            <!-- 總計摘要 -->
             <div class="summary-bar" id="summary-bar">
                 <span class="summary-label">📌 未使用總額</span>
                 <span class="summary-value" id="total-unused">0 元</span>
-                <span class="summary-divider">|</span>
-                <div id="platform-summary" class="platform-summary"></div>
             </div>
             
-            <!-- 篩選器 -->
-            <div class="filter-row">
-                <select id="filter-platform" onchange="loadCoupons()">
-                    <option value="">全部平臺</option>
-                    {% for platform in platforms %}
-                    <option value="{{ platform }}">{{ platform }}</option>
-                    {% endfor %}
-                </select>
-                <select id="filter-status" onchange="loadCoupons()">
-                    <option value="">全部狀態</option>
-                    <option value="unused">未使用</option>
-                    <option value="used">已使用</option>
-                </select>
-            </div>
-            
-            <!-- 表格 -->
-            <div class="table-container">
-                <table id="coupons-table">
-                    <thead>
-                        <tr>
-                            <th>平臺</th>
-                            <th>券</th>
-                            <th>日期</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="coupons-tbody">
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- 分頁控制 -->
-            <div id="pagination"></div>
+            <!-- 各平臺統計 + 消費券記錄 -->
+            <h3 style="margin-top: 20px; color: #1a1a2e;">📊 各平臺統計</h3>
+            <div class="summary-grid" id="summary-grid"></div>
             
             <!-- 全澳抽獎趨勢 iframe -->
             <div class="collapsible-section" id="trends-section">

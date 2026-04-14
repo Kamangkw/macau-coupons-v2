@@ -16,6 +16,9 @@ __pycache__/
 # Database
 *.db
 
+# Secret key
+.secret_key
+
 # OS
 .DS_Store
 Thumbs.db

@@ -12,15 +12,25 @@ import secrets
 
 app = Flask(__name__)
 
+SECRET_KEY_FILE = os.path.join(os.path.dirname(__file__), ".secret_key")
+
+if os.path.exists(SECRET_KEY_FILE):
+    with open(SECRET_KEY_FILE, "r") as f:
+        SECRET_KEY = f.read().strip()
+else:
+    SECRET_KEY = secrets.token_hex(16)
+    with open(SECRET_KEY_FILE, "w") as f:
+        f.write(SECRET_KEY)
+
 if os.environ.get("FLASK_ENV") == "production":
-    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
+    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or SECRET_KEY
     if not app.config["SECRET_KEY"]:
         raise ValueError("SECRET_KEY environment variable must be set in production")
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///coupons.db"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["WTF_CSRF_ENABLED"] = True
 else:
-    app.config["SECRET_KEY"] = secrets.token_hex(16)
+    app.config["SECRET_KEY"] = SECRET_KEY
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///coupons.db"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -255,8 +265,10 @@ def create_coupon():
     data = request.get_json()
     coupons_data = data.get("coupons", [])
 
-    if not coupons_data or len(coupons_data) > 3:
+    if len(coupons_data) > 3:
         return jsonify({"error": "一次最多新增3條記錄"}), 400
+    if len(coupons_data) == 0:
+        return jsonify({"error": "請選擇券面額"}), 400
 
     created = []
     for item in coupons_data:
@@ -348,6 +360,12 @@ def get_summary():
         used_total = result.used_total or 0
         total_unused += unused_total
 
+        coupons = (
+            Coupon.query.filter_by(user_id=user_id, platform=platform)
+            .order_by(Coupon.draw_date.desc())
+            .all()
+        )
+
         summary.append(
             {
                 "platform": platform,
@@ -356,6 +374,7 @@ def get_summary():
                 "used_count": result.used_count or 0,
                 "unused_count": result.unused_count or 0,
                 "total_count": (result.used_count or 0) + (result.unused_count or 0),
+                "coupons": [c.to_dict() for c in coupons],
             }
         )
 

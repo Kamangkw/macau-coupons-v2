@@ -168,11 +168,40 @@ async function loadSummary() {
 function renderSummary(data) {
     document.getElementById('total-unused').textContent = data.total_unused + ' 元';
     
-    const container = document.getElementById('platform-summary');
-    container.innerHTML = data.platforms
-        .filter(p => p.unused_count > 0)
-        .map(p => `<span class="platform-tag">${p.platform}: ${p.total_coupon}元</span>`)
-        .join('');
+    const grid = document.getElementById('summary-grid');
+    grid.innerHTML = '';
+    
+    data.platforms.forEach(item => {
+        if (item.total_count > 0) {
+            const card = document.createElement('div');
+            card.className = 'summary-card';
+            
+            let couponsHtml = item.coupons.map(c => {
+                const statusClass = c.is_used ? 'status-used' : 'status-unused';
+                const statusText = c.is_used ? '已用' : '未用';
+                const actionBtn = c.is_used 
+                    ? `<button class="btn btn-small btn-secondary" onclick="toggleCouponStatus(${c.id}, false)">未</button>`
+                    : `<button class="btn btn-small btn-primary" onclick="toggleCouponStatus(${c.id}, true)">✓</button>`;
+                return `<div class="coupon-row">
+                    <span class="coupon-amount ${statusClass}">${c.amount}元</span>
+                    <span class="coupon-date">${formatDateShort(c.draw_date)}</span>
+                    <span class="coupon-status ${statusClass}">${statusText}</span>
+                    ${actionBtn}
+                    <button class="btn btn-danger btn-small" onclick="confirmDelete(${c.id})">×</button>
+                </div>`;
+            }).join('');
+            
+            card.innerHTML = `
+                <h3>${item.platform}</h3>
+                <div class="card-stats">
+                    <span class="stat-unused">未: ${item.total_coupon}元</span>
+                    <span class="stat-used">已: ${item.platform_total}元</span>
+                </div>
+                <div class="coupon-list">${couponsHtml}</div>
+            `;
+            grid.appendChild(card);
+        }
+    });
 }
 
 async function loadCoupons(page = 1) {

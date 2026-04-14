@@ -388,7 +388,7 @@ td:last-child .btn {
     min-width: 35px;
 }
 
-/* 合併的摘要欄 */
+/* 總計摘要 */
 .summary-bar {
     display: flex;
     align-items: center;
@@ -397,7 +397,6 @@ td:last-child .btn {
     background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
     border-radius: 12px;
     margin-top: 15px;
-    flex-wrap: wrap;
     font-size: 0.9rem;
 }
 
@@ -412,23 +411,12 @@ td:last-child .btn {
     color: #d63031;
 }
 
-.summary-divider {
-    color: #ccc;
-    font-size: 1.2rem;
-}
-
-.platform-summary {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.platform-tag {
-    background: rgba(255,255,255,0.7);
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    color: #333;
+/* 總覽網格 */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
 }
     padding: 12px;
     transition: transform 0.3s ease;
@@ -445,29 +433,79 @@ td:last-child .btn {
     font-size: 0.9rem;
 }
 
-.summary-stat {
+.card-stats {
     display: flex;
-    justify-content: space-between;
-    padding: 4px 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    gap: 10px;
+    margin-bottom: 8px;
     font-size: 0.8rem;
 }
 
-.summary-stat:last-child {
-    border-bottom: none;
-}
-
-.summary-stat .label {
-    color: #666;
-}
-
-.summary-stat .value {
-    font-weight: bold;
-    color: #1a1a2e;
-}
-
-.summary-stat .value.highlight {
+.stat-unused {
     color: #e74c3c;
+    font-weight: bold;
+}
+
+.stat-used {
+    color: #27ae60;
+}
+
+.coupon-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.coupon-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    font-size: 0.75rem;
+}
+
+.coupon-amount {
+    font-weight: bold;
+    min-width: 40px;
+}
+
+.coupon-amount.status-unused {
+    color: #e74c3c;
+}
+
+.coupon-amount.status-used {
+    color: #999;
+    text-decoration: line-through;
+}
+
+.coupon-date {
+    color: #666;
+    font-size: 0.7rem;
+}
+
+.coupon-status {
+    padding: 1px 5px;
+    border-radius: 10px;
+    font-size: 0.65rem;
+}
+
+.coupon-status.status-unused {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.coupon-status.status-used {
+    background: #d4edda;
+    color: #155724;
+}
+
+.coupon-row .btn {
+    padding: 2px 6px;
+    font-size: 0.65rem;
+    min-width: auto;
 }
 
 /* Modal */
