@@ -11,8 +11,18 @@ body {
     font-family: 'Segoe UI', 'Microsoft JhengHei', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
-    padding: 20px;
+    padding: 10px;
     color: #333;
+    overflow-x: hidden;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
 }
 
 /* 登入畫面 */
@@ -420,18 +430,15 @@ td:last-child .btn {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
     margin-top: 10px;
+    width: 100%;
 }
 
-@media (min-width: 600px) {
-    .summary-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (min-width: 900px) {
-    .summary-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
+.summary-card {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    padding: 12px;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .summary-card {
