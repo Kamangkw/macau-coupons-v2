@@ -436,9 +436,25 @@ td:last-child .btn {
 .summary-card {
     background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
     border-radius: 10px;
-    padding: 12px;
+    padding: 10px;
     min-width: 0;
     overflow: hidden;
+}
+
+.summary-card h3 {
+    color: #1a1a2e;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-totals {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 0.8rem;
 }
 
 .summary-card {
@@ -474,19 +490,19 @@ td:last-child .btn {
 .coupon-list {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    max-height: 200px;
+    gap: 4px;
+    max-height: 150px;
     overflow-y: auto;
 }
 
 .coupon-item {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 8px;
+    gap: 4px;
+    padding: 5px 6px;
     background: white;
-    border-radius: 8px;
-    font-size: 0.85rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
 }
 
 .coupon-item.status-used {
@@ -501,24 +517,26 @@ td:last-child .btn {
 .coupon-amt {
     font-weight: bold;
     color: #e74c3c;
-    min-width: 40px;
+    min-width: 35px;
+    font-size: 0.85rem;
 }
 
 .coupon-date {
     color: #666;
-    font-size: 0.75rem;
-    flex: 1;
+    font-size: 0.7rem;
+    flex-shrink: 0;
 }
 
 .coupon-actions {
     display: flex;
-    gap: 4px;
+    gap: 2px;
+    margin-left: auto;
 }
 
 .coupon-actions .btn {
-    padding: 3px 8px;
-    font-size: 0.75rem;
-    min-width: 32px;
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    min-width: 28px;
 }
 
 .summary-label {
