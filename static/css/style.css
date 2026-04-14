@@ -417,9 +417,21 @@ td:last-child .btn {
 /* 總覽網格 */
 .summary-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
-    margin-top: 15px;
+    margin-top: 10px;
+}
+
+@media (min-width: 600px) {
+    .summary-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 900px) {
+    .summary-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
 }
 
 .summary-card {
