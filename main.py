@@ -329,7 +329,12 @@ def get_summary():
     for platform in PLATFORMS:
         result = (
             db.session.query(
-                db.func.sum(Coupon.amount).label("total_amount"),
+                db.func.sum(
+                    db.case((Coupon.is_used == False, Coupon.amount), else_=0)
+                ).label("unused_total"),
+                db.func.sum(
+                    db.case((Coupon.is_used == True, Coupon.amount), else_=0)
+                ).label("used_total"),
                 db.func.count(db.case((Coupon.is_used == False, 1))).label(
                     "unused_count"
                 ),
@@ -339,8 +344,8 @@ def get_summary():
             .first()
         )
 
-        unused_total = result.total_amount or 0 if result.unused_count > 0 else 0
-        used_total = (result.total_amount or 0) - unused_total
+        unused_total = result.unused_total or 0
+        used_total = result.used_total or 0
         total_unused += unused_total
 
         summary.append(
