@@ -184,8 +184,10 @@ function renderSummary(data) {
                 return `<div class="coupon-item ${statusClass}">
                     <span class="coupon-amt">${c.amount}元</span>
                     <span class="coupon-date">${formatDateShort(c.draw_date)}</span>
-                    ${actionBtn}
-                    <button class="btn btn-danger btn-small" onclick="confirmDelete(${c.id})">×</button>
+                    <div class="coupon-actions">
+                        ${actionBtn}
+                        <button class="btn btn-danger btn-small" onclick="confirmDelete(${c.id})">×</button>
+                    </div>
                 </div>`;
             }).join('');
             

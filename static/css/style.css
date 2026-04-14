@@ -482,11 +482,11 @@ td:last-child .btn {
 .coupon-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 10px;
+    gap: 6px;
+    padding: 6px 8px;
     background: white;
     border-radius: 8px;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
 .coupon-item.status-used {
@@ -501,19 +501,24 @@ td:last-child .btn {
 .coupon-amt {
     font-weight: bold;
     color: #e74c3c;
-    min-width: 45px;
-    font-size: 1rem;
+    min-width: 40px;
 }
 
 .coupon-date {
     color: #666;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
+    flex: 1;
 }
 
-.coupon-item .btn {
-    padding: 4px 10px;
-    font-size: 0.8rem;
-    min-width: 40px;
+.coupon-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.coupon-actions .btn {
+    padding: 3px 8px;
+    font-size: 0.75rem;
+    min-width: 32px;
 }
 
 .summary-label {
