@@ -436,7 +436,7 @@ td:last-child .btn {
 .summary-card {
     background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
     border-radius: 10px;
-    padding: 10px;
+    padding: 8px;
     min-width: 0;
     overflow: hidden;
 }
@@ -498,11 +498,11 @@ td:last-child .btn {
 .coupon-item {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 8px;
+    gap: 4px;
+    padding: 4px 6px;
     background: white;
     border-radius: 6px;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
 }
 
 .coupon-item.status-used {
@@ -517,37 +517,37 @@ td:last-child .btn {
 .coupon-amt {
     font-weight: bold;
     color: #e74c3c;
-    min-width: 40px;
-    font-size: 0.9rem;
+    min-width: 32px;
+    font-size: 0.85rem;
 }
 
 .coupon-date {
     color: #666;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     flex-shrink: 0;
 }
 
 .coupon-actions {
     display: flex;
-    gap: 4px;
+    gap: 3px;
     margin-left: auto;
 }
 
 .coupon-actions .btn {
-    padding: 4px 10px;
-    font-size: 0.8rem;
+    padding: 3px 6px;
+    font-size: 0.7rem;
 }
 
 .coupon-actions .btn-secondary {
-    min-width: 35px;
+    min-width: 28px;
 }
 
 .coupon-actions .btn-primary {
-    min-width: 45px;
+    min-width: 36px;
 }
 
 .coupon-actions .btn-danger {
-    min-width: 30px;
+    min-width: 26px;
 }
 
 .summary-label {
