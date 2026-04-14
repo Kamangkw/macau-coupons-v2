@@ -388,33 +388,36 @@ td:last-child .btn {
     min-width: 35px;
 }
 
-/* 總計摘要 */
-.summary-bar {
+.section-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.section-header-row h3 {
+    color: #1a1a2e;
+}
+
+.inline-total {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px 15px;
-    background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
-    border-radius: 12px;
-    margin-top: 15px;
+    gap: 8px;
     font-size: 0.9rem;
+    color: #666;
 }
 
-.summary-label {
-    font-weight: bold;
-    color: #856404;
-}
-
-.summary-value {
-    font-size: 1.2rem;
+.inline-total .total-value {
     font-weight: bold;
     color: #d63031;
+    font-size: 1.1rem;
 }
 
 /* 總覽網格 */
 .summary-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 10px;
     margin-top: 15px;
 }
@@ -774,12 +777,9 @@ td:last-child .btn {
 
 /* 小螢幕優化 */
 @media (max-width: 400px) {
-    .amount-grid {
-        grid-template-columns: 1fr;
-    }
-    
     .summary-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
     }
 }
 
