@@ -166,17 +166,13 @@ async function loadSummary() {
 }
 
 function renderSummary(data) {
-    const grid = document.getElementById('summary-grid');
-    grid.innerHTML = '';
     document.getElementById('total-unused').textContent = data.total_unused + ' 元';
-    data.platforms.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'summary-card';
-        card.innerHTML = '<h3>' + item.platform + (item.platform === 'UEpay' ? ' 🗑️' : '') + '</h3>' +
-            '<div class="summary-stat"><span class="label">總券額</span><span class="value">' + item.platform_total + ' 元</span></div>' +
-            '<div class="summary-stat"><span class="label">未使用</span><span class="value highlight">' + item.total_coupon + ' 元</span></div>';
-        grid.appendChild(card);
-    });
+    
+    const container = document.getElementById('platform-summary');
+    container.innerHTML = data.platforms
+        .filter(p => p.unused_count > 0)
+        .map(p => `<span class="platform-tag">${p.platform}: ${p.total_coupon}元</span>`)
+        .join('');
 }
 
 async function loadCoupons(page = 1) {

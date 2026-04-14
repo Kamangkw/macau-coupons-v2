@@ -388,55 +388,48 @@ td:last-child .btn {
     min-width: 35px;
 }
 
-/* 總計摘要 */
-.total-summary {
+/* 合併的摘要欄 */
+.summary-bar {
     display: flex;
-    gap: 15px;
-    margin-top: 20px;
-    flex-wrap: wrap;
-}
-
-.total-item {
-    flex: 1;
-    min-width: 140px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    padding: 15px;
-    border-radius: 12px;
-    text-align: center;
-}
-
-.total-item.highlight {
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
     background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+    border-radius: 12px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+    font-size: 0.9rem;
 }
 
-.total-label {
-    display: block;
-    font-size: 0.85rem;
-    color: #666;
-    margin-bottom: 5px;
-}
-
-.total-value {
-    font-size: 1.3rem;
+.summary-label {
     font-weight: bold;
-    color: #1a1a2e;
-}
-
-.total-item.highlight .total-value {
     color: #856404;
 }
 
-/* 總覽網格 */
-.summary-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 10px;
-    margin-top: 15px;
+.summary-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #d63031;
 }
 
-.summary-card {
-    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
-    border-radius: 10px;
+.summary-divider {
+    color: #ccc;
+    font-size: 1.2rem;
+}
+
+.platform-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.platform-tag {
+    background: rgba(255,255,255,0.7);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: #333;
+}
     padding: 12px;
     transition: transform 0.3s ease;
 }

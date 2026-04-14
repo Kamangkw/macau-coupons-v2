@@ -102,10 +102,15 @@
                 </div>
             </div>
             
-            <!-- 兌換消費券摘要（在摺疊區塊外，永遠可見） -->
-            <h3 class="exchange-title" style="margin-top: 15px;">💰 兌換消費券:</h3>
+            <!-- 總計摘要 + 各平臺統計 -->
+            <div class="summary-bar" id="summary-bar">
+                <span class="summary-label">📌 未使用總額</span>
+                <span class="summary-value" id="total-unused">0 元</span>
+                <span class="summary-divider">|</span>
+                <div id="platform-summary" class="platform-summary"></div>
+            </div>
             
-            <!-- 篩選器（在摺疊區塊外，永遠可見） -->
+            <!-- 篩選器 -->
             <div class="filter-row">
                 <select id="filter-platform" onchange="loadCoupons()">
                     <option value="">全部平臺</option>
@@ -120,7 +125,7 @@
                 </select>
             </div>
             
-            <!-- 表格（在摺疊區塊外，永遠可見） -->
+            <!-- 表格 -->
             <div class="table-container">
                 <table id="coupons-table">
                     <thead>
@@ -138,19 +143,6 @@
             
             <!-- 分頁控制 -->
             <div id="pagination"></div>
-            
-            <!-- 總計摘要 -->
-            <div class="total-summary" id="total-summary">
-                <div class="total-item highlight">
-                    <span class="total-label">📌 未使用總額</span>
-                    <span class="total-value" id="total-unused">0 元</span>
-                </div>
-            </div>
-            
-            <!-- 各平臺統計摘要 -->
-            <h3 style="margin-top: 25px; color: #1a1a2e;">各平臺統計</h3>
-            <div class="summary-grid" id="summary-grid">
-            </div>
             
             <!-- 全澳抽獎趨勢 iframe -->
             <div class="collapsible-section" id="trends-section">
