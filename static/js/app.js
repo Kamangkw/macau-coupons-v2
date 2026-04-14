@@ -178,14 +178,12 @@ function renderSummary(data) {
             
             let couponsHtml = item.coupons.map(c => {
                 const statusClass = c.is_used ? 'status-used' : 'status-unused';
-                const statusText = c.is_used ? '已用' : '未用';
                 const actionBtn = c.is_used 
                     ? `<button class="btn btn-small btn-secondary" onclick="toggleCouponStatus(${c.id}, false)">未</button>`
                     : `<button class="btn btn-small btn-primary" onclick="toggleCouponStatus(${c.id}, true)">✓</button>`;
-                return `<div class="coupon-row">
-                    <span class="coupon-amount ${statusClass}">${c.amount}元</span>
+                return `<div class="coupon-item ${statusClass}">
+                    <span class="coupon-amt">${c.amount}元</span>
                     <span class="coupon-date">${formatDateShort(c.draw_date)}</span>
-                    <span class="coupon-status ${statusClass}">${statusText}</span>
                     ${actionBtn}
                     <button class="btn btn-danger btn-small" onclick="confirmDelete(${c.id})">×</button>
                 </div>`;
@@ -193,9 +191,9 @@ function renderSummary(data) {
             
             card.innerHTML = `
                 <h3>${item.platform}</h3>
-                <div class="card-stats">
-                    <span class="stat-unused">未: ${item.total_coupon}元</span>
-                    <span class="stat-used">已: ${item.platform_total}元</span>
+                <div class="card-totals">
+                    <span class="total-unused">未: ${item.total_coupon}元</span>
+                    <span class="total-used">已: ${item.platform_total}元</span>
                 </div>
                 <div class="coupon-list">${couponsHtml}</div>
             `;

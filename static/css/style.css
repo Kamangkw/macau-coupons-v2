@@ -414,6 +414,97 @@ td:last-child .btn {
 /* 總覽網格 */
 .summary-grid {
     display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.summary-card {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.summary-card h3 {
+    color: #1a1a2e;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.card-totals {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 0.8rem;
+}
+
+.total-unused {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+.total-used {
+    color: #27ae60;
+}
+
+.coupon-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.coupon-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    background: white;
+    border-radius: 6px;
+    font-size: 0.75rem;
+}
+
+.coupon-item.status-used {
+    opacity: 0.6;
+}
+
+.coupon-item.status-used .coupon-amt {
+    text-decoration: line-through;
+    color: #999;
+}
+
+.coupon-amt {
+    font-weight: bold;
+    color: #e74c3c;
+    min-width: 35px;
+}
+
+.coupon-date {
+    color: #666;
+    font-size: 0.7rem;
+}
+
+.coupon-item .btn {
+    padding: 2px 6px;
+    font-size: 0.65rem;
+    min-width: auto;
+}
+
+.summary-label {
+    font-weight: bold;
+    color: #856404;
+}
+
+.summary-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #d63031;
+}
+
+/* 總覽網格 */
+.summary-grid {
+    display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 10px;
     margin-top: 15px;

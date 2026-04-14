@@ -12,27 +12,10 @@ import secrets
 
 app = Flask(__name__)
 
-SECRET_KEY_FILE = os.path.join(os.path.dirname(__file__), ".secret_key")
-
-if os.path.exists(SECRET_KEY_FILE):
-    with open(SECRET_KEY_FILE, "r") as f:
-        SECRET_KEY = f.read().strip()
-else:
-    SECRET_KEY = secrets.token_hex(16)
-    with open(SECRET_KEY_FILE, "w") as f:
-        f.write(SECRET_KEY)
-
-if os.environ.get("FLASK_ENV") == "production":
-    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or SECRET_KEY
-    if not app.config["SECRET_KEY"]:
-        raise ValueError("SECRET_KEY environment variable must be set in production")
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///coupons.db"
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["WTF_CSRF_ENABLED"] = True
-else:
-    app.config["SECRET_KEY"] = SECRET_KEY
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///coupons.db"
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SECRET_KEY"] = "macau-coupons-secret-key-2026"
+app.config["SESSION_TYPE"] = "filesystem"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///coupons.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
