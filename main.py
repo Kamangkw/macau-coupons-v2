@@ -4,6 +4,7 @@ Flask 後端應用程式
 """
 
 import os
+import sys
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, date, timezone
@@ -30,7 +31,9 @@ PLATFORMS = [
     "中國銀行",
 ]
 
-COUPON_AMOUNTS = [0, 10, 20, 50, 100, 200]
+# 2026-10-10：抽獎唔再出「0 元」選項，改為 12 元消費券。
+# 舊有 amount = 0 嘅記錄會由 run_migrations() 一次性改成 12（其他欄位一律不變）。
+COUPON_AMOUNTS = [10, 12, 20, 50, 100, 200]
 
 
 class User(db.Model):
@@ -39,6 +42,8 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False, unique=True)
     form_collapsed = db.Column(db.Boolean, default=False)
+    # 舊「全澳抽獎趨勢」模組已於 2026-10-10 移除。呢個欄位保留唔刪，
+    # 避免改動現有資料庫結構；程式已唔再讀寫佢。
     trends_collapsed = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
@@ -83,6 +88,33 @@ class Coupon(db.Model):
         }
 
 
+# ── 一次性資料遷移（2026-10-10）─────────────────────────────────────
+# 舊「0 元」抽獎選項已改為 12 元消費券。只更新 amount = 0 嘅記錄；
+# id / user_id / platform / draw_date / is_used / used_date / created_at 一律唔動。
+_migration_done = False
+
+
+def run_migrations():
+    """每個 process 只跑一次；冇 0 元記錄時影響 0 行，重複執行都安全。"""
+    global _migration_done
+    if _migration_done:
+        return
+    try:
+        result = db.session.execute(
+            db.text("UPDATE coupons SET amount = 12 WHERE amount = 0")
+        )
+        db.session.commit()
+        if result.rowcount:
+            print(
+                f"[migration] 0 元 → 12 元：更新咗 {result.rowcount} 筆記錄",
+                file=sys.stderr,
+            )
+        _migration_done = True
+    except Exception as exc:  # 失敗就唔設旗標，下個請求會再試
+        db.session.rollback()
+        print(f"[migration] 失敗（會再試）：{exc}", file=sys.stderr)
+
+
 @app.before_request
 def ensure_db():
     db.create_all()
@@ -102,6 +134,8 @@ def ensure_db():
         db.session.commit()
     except Exception:
         db.session.rollback()
+
+    run_migrations()
 
 
 @app.errorhandler(400)
@@ -187,9 +221,6 @@ def get_user_settings():
     return jsonify(
         {
             "form_collapsed": user.form_collapsed if user.form_collapsed else False,
-            "trends_collapsed": user.trends_collapsed
-            if hasattr(user, "trends_collapsed") and user.trends_collapsed
-            else False,
         }
     )
 
@@ -208,8 +239,6 @@ def update_user_settings():
 
     if "form_collapsed" in data:
         user.form_collapsed = data["form_collapsed"]
-    if "trends_collapsed" in data:
-        user.trends_collapsed = data["trends_collapsed"]
     db.session.commit()
     return jsonify({"message": "設置已保存"})
 

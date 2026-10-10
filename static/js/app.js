@@ -84,10 +84,6 @@ async function loadSectionState() {
                 document.getElementById('lottery-content').classList.add('collapsed');
                 document.getElementById('lottery-toggle').textContent = '▶';
             }
-            if (data.trends_collapsed) {
-                document.getElementById('trends-content').classList.add('collapsed');
-                document.getElementById('trends-toggle').textContent = '▶';
-            }
         }
     } catch (error) {
         console.error('載入狀態失敗:', error);
