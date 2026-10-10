@@ -3,6 +3,7 @@
 Flask 後端應用程式
 """
 
+import json
 import os
 import sys
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
@@ -54,6 +55,30 @@ def amount_label(amount):
 AMOUNT_LABELS = {a: amount_label(a) for a in COUPON_OPTIONS}
 
 
+def parse_theme(raw):
+    """驗證前端抽到嘅顏色組合，回傳 (ok, 可以儲存嘅 JSON 字串或 None)。
+
+    只存「配方」（明暗模式 + 底色色相 + 主色色相），唔存實際色值，
+    所以日後調整配色公式，舊用戶抽到嘅組合會自動跟住更新。
+    """
+    if raw is None:
+        return True, None
+    if not isinstance(raw, dict) or raw.get("mode") not in ("light", "dark"):
+        return False, None
+    out = {"mode": raw["mode"]}
+    for key in ("hue", "accentHue"):
+        if key not in raw:           # 缺欄位一律當無效，唔可以靜靜當 0
+            return False, None
+        try:
+            value = int(raw[key])
+        except (TypeError, ValueError):
+            return False, None
+        if not 0 <= value <= 359:
+            return False, None
+        out[key] = value
+    return True, json.dumps(out, separators=(",", ":"))
+
+
 class User(db.Model):
     __tablename__ = "users"
 
@@ -63,6 +88,9 @@ class User(db.Model):
     # 舊「全澳抽獎趨勢」模組已於 2026-10-10 移除。呢個欄位保留唔刪，
     # 避免改動現有資料庫結構；程式已唔再讀寫佢。
     trends_collapsed = db.Column(db.Boolean, default=False)
+    # 隨機抽到嘅顏色組合（JSON 字串，例 {"mode":"dark","hue":210,"accentHue":275}）。
+    # NULL = 用預設紫色。
+    theme = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     coupons = db.relationship("Coupon", backref="user", lazy=True)
@@ -153,6 +181,10 @@ def ensure_db():
                     "ALTER TABLE users ADD COLUMN trends_collapsed BOOLEAN DEFAULT 0"
                 )
             )
+        if "theme" not in columns:
+            db.session.execute(
+                db.text("ALTER TABLE users ADD COLUMN theme TEXT DEFAULT NULL")
+            )
         db.session.commit()
     except Exception:
         db.session.rollback()
@@ -241,9 +273,17 @@ def get_user_settings():
     if not user:
         return jsonify({"error": "用戶不存在"}), 404
 
+    theme = None
+    if user.theme:
+        try:
+            theme = json.loads(user.theme)
+        except (TypeError, ValueError):
+            theme = None
+
     return jsonify(
         {
             "form_collapsed": user.form_collapsed if user.form_collapsed else False,
+            "theme": theme,
         }
     )
 
@@ -262,6 +302,11 @@ def update_user_settings():
 
     if "form_collapsed" in data:
         user.form_collapsed = data["form_collapsed"]
+    if "theme" in data:
+        ok, stored = parse_theme(data["theme"])
+        if not ok:
+            return jsonify({"error": "顏色組合格式錯誤"}), 400
+        user.theme = stored
     db.session.commit()
     return jsonify({"message": "設置已保存"})
 

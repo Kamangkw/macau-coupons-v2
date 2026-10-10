@@ -84,6 +84,8 @@ async function loadSectionState() {
                 document.getElementById('lottery-content').classList.add('collapsed');
                 document.getElementById('lottery-toggle').textContent = '▶';
             }
+            // 還原呢個用戶上次抽到嘅顏色組合（null = 預設）
+            applyTheme(data.theme || null);
         }
     } catch (error) {
         console.error('載入狀態失敗:', error);

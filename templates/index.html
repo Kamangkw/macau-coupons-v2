@@ -29,6 +29,7 @@
                 </div>
                 <div class="user-info">
                     <span id="user-name-display">用戶</span>
+                    <button class="theme-btn" id="theme-btn" title="隨機抽一個顏色組合（會記住）">🎲 換顏色</button>
                     <button class="btn btn-small" onclick="logout()">登出</button>
                     <button class="btn btn-danger btn-small" onclick="confirmClearAll()">🗑️ 清零</button>
                 </div>
@@ -104,7 +105,7 @@
             
             <!-- 各平臺統計 + 未使用總額 -->
             <div class="section-header-row">
-                <h3 style="color: #1a1a2e;">📊 各平臺統計</h3>
+                <h3 style="color: var(--fg);">📊 各平臺統計</h3>
                 <div class="inline-total">
                     <span>未使用:</span>
                     <span class="total-value" id="total-unused">0 元</span>
@@ -127,6 +128,7 @@
         </div>
     </div>
 
+    <script src="/static/js/theme.js"></script>
     <script src="/static/js/app.js"></script>
 </body>
 </html>

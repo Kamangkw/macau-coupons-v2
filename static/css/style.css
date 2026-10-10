@@ -1,5 +1,42 @@
 /* 澳門消費券記錄系統 - 樣式表 */
 
+/* ── 主題變數（預設值＝原本紫色觀感；用戶抽色時由 JS 覆寫）────────────
+   JS 只會改 :root 嘅呢批變數，唔會改動任何排版。 */
+:root {
+    --bg-1: #667eea;          /* 頁面背景漸變起點 */
+    --bg-2: #764ba2;          /* 頁面背景漸變終點 */
+    --panel-1: #1a1a2e;       /* header 漸變起點 */
+    --panel-2: #16213e;       /* header 漸變終點 */
+    --surface: #ffffff;       /* 卡片、容器底色 */
+    --surface-2: #f5f7fa;     /* 淺色區塊底色 */
+    --fg: #1a1a2e;            /* 標題字 */
+    --text: #333333;          /* 正文 */
+    --muted: #666666;
+    --muted-2: #999999;
+    --line: #e0e0e0;
+    --accent: #667eea;
+    --accent-2: #764ba2;
+    --accent-rgb: 102, 126, 234;
+    --on-accent: #ffffff;     /* 主色按鈕上嘅字 */
+    --on-panel: #ffffff;      /* 深色面板上嘅字 */
+    --secondary: #6c757d;
+    --secondary-dark: #5a6268;
+    --danger: #e74c3c;
+    --danger-dark: #c0392b;
+    --success: #27ae60;
+    --success-dark: #218838;
+    --success-bg: #d4edda;
+    --success-fg: #155724;
+    --warning-bg: #fff3cd;
+    --warning-fg: #856404;
+}
+
+/* 換色時輕輕過渡，唔會影響 hover */
+body, .container, header, .summary-card, .btn {
+    transition: background-color .35s ease, background-image .35s ease,
+                color .35s ease, border-color .35s ease;
+}
+
 /* 全域樣式 */
 * {
     margin: 0;
@@ -9,17 +46,17 @@
 
 body {
     font-family: 'Segoe UI', 'Microsoft JhengHei', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%);
     min-height: 100vh;
     padding: 10px;
-    color: #333;
+    color: var(--text);
     overflow-x: hidden;
 }
 
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    background: white;
+    background: var(--surface);
     border-radius: 16px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
     overflow: hidden;
@@ -34,7 +71,7 @@ body {
 }
 
 .login-box {
-    background: white;
+    background: var(--surface);
     padding: 40px;
     border-radius: 16px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
@@ -44,20 +81,20 @@ body {
 }
 
 .login-box h1 {
-    color: #1a1a2e;
+    color: var(--fg);
     margin-bottom: 10px;
     font-size: 1.5rem;
 }
 
 .login-box p {
-    color: #666;
+    color: var(--muted);
     margin-bottom: 20px;
 }
 
 .login-box input {
     width: 100%;
     padding: 12px;
-    border: 2px solid #e0e0e0;
+    border: 2px solid var(--line);
     border-radius: 8px;
     font-size: 1rem;
     margin-bottom: 15px;
@@ -65,13 +102,13 @@ body {
 
 .login-box input:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--accent);
 }
 
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    background: white;
+    background: var(--surface);
     border-radius: 16px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
     overflow: hidden;
@@ -79,8 +116,8 @@ body {
 
 /* Header */
 header {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    color: white;
+    background: linear-gradient(135deg, var(--panel-1) 0%, var(--panel-2) 100%);
+    color: var(--on-panel);
     padding: 15px 20px;
 }
 
@@ -98,7 +135,7 @@ header h1 {
 }
 
 .subtitle {
-    color: #a0a0a0;
+    color: var(--muted-2);
     font-size: 0.8rem;
 }
 
@@ -110,7 +147,7 @@ header h1 {
 
 #user-name-display {
     font-weight: bold;
-    color: #667eea;
+    color: var(--accent);
     font-size: 0.9rem;
 }
 
@@ -135,7 +172,7 @@ header h1 {
 }
 
 .section-header h2 {
-    color: #1a1a2e;
+    color: var(--fg);
     font-size: 1.2rem;
     margin: 0;
     display: flex;
@@ -145,7 +182,7 @@ header h1 {
 
 .toggle-icon {
     font-size: 0.8rem;
-    color: #666;
+    color: var(--muted);
 }
 
 .section-content {
@@ -158,7 +195,7 @@ header h1 {
 }
 
 .info-text {
-    color: #888;
+    color: var(--muted);
     font-size: 0.85rem;
     margin-bottom: 15px;
 }
@@ -174,31 +211,31 @@ header h1 {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    color: var(--on-accent);
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 5px 15px rgba(var(--accent-rgb), 0.4);
 }
 
 .btn-secondary {
-    background: #6c757d;
-    color: white;
+    background: var(--secondary);
+    color: var(--on-accent);
 }
 
 .btn-secondary:hover {
-    background: #5a6268;
+    background: var(--secondary-dark);
 }
 
 .btn-danger {
-    background: #e74c3c;
-    color: white;
+    background: var(--danger);
+    color: var(--on-accent);
 }
 
 .btn-danger:hover {
-    background: #c0392b;
+    background: var(--danger-dark);
 }
 
 .btn-small {
@@ -242,7 +279,7 @@ header h1 {
 .amount-inputs > label {
     display: block;
     margin-bottom: 8px;
-    color: #666;
+    color: var(--muted);
     font-weight: 500;
     font-size: 0.9rem;
 }
@@ -260,22 +297,22 @@ header h1 {
 .amount-entry span {
     display: block;
     font-size: 0.8rem;
-    color: #888;
+    color: var(--muted);
     margin-bottom: 5px;
 }
 
 .amount-entry select {
     width: 100%;
     padding: 10px;
-    border: 2px solid #e0e0e0;
+    border: 2px solid var(--line);
     border-radius: 8px;
     font-size: 1rem;
-    background: white;
+    background: var(--surface);
 }
 
 .amount-entry select:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--accent);
 }
 
 /* 表單 */
@@ -286,7 +323,7 @@ header h1 {
 .form-group label {
     display: block;
     margin-bottom: 5px;
-    color: #666;
+    color: var(--muted);
     font-weight: 500;
     font-size: 0.85rem;
 }
@@ -295,7 +332,7 @@ header h1 {
 .form-group select {
     width: 100%;
     padding: 10px;
-    border: 2px solid #e0e0e0;
+    border: 2px solid var(--line);
     border-radius: 8px;
     font-size: 1rem;
     transition: border-color 0.3s ease;
@@ -304,7 +341,7 @@ header h1 {
 .form-group input:focus,
 .form-group select:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--accent);
 }
 
 /* 篩選器 */
@@ -317,18 +354,18 @@ header h1 {
 
 .filter-row select {
     padding: 8px 12px;
-    border: 2px solid #e0e0e0;
+    border: 2px solid var(--line);
     border-radius: 8px;
     font-size: 0.85rem;
     cursor: pointer;
     flex: 1;
     min-width: 100px;
-    background: white;
+    background: var(--surface);
 }
 
 .filter-row select:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--accent);
 }
 
 /* 表格 - 緊湊版 */
@@ -347,13 +384,13 @@ table {
 th, td {
     padding: 10px 5px;
     text-align: left;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--line);
     white-space: nowrap;
 }
 
 th {
-    background: #f5f7fa;
-    color: #1a1a2e;
+    background: var(--surface-2);
+    color: var(--fg);
     font-weight: 600;
     font-size: 0.8rem;
 }
@@ -363,7 +400,7 @@ td {
 }
 
 tr:hover {
-    background: #f8f9fa;
+    background: var(--surface-2);
 }
 
 /* 狀態徽章 */
@@ -376,13 +413,13 @@ tr:hover {
 }
 
 .status-unused {
-    background: #fff3cd;
-    color: #856404;
+    background: var(--warning-bg);
+    color: var(--warning-fg);
 }
 
 .status-used {
-    background: #d4edda;
-    color: #155724;
+    background: var(--success-bg);
+    color: var(--success-fg);
 }
 
 /* 操作按鈕 */
@@ -407,7 +444,7 @@ td:last-child .btn {
 }
 
 .section-header-row h3 {
-    color: #1a1a2e;
+    color: var(--fg);
 }
 
 .inline-total {
@@ -415,12 +452,12 @@ td:last-child .btn {
     align-items: center;
     gap: 8px;
     font-size: 0.9rem;
-    color: #666;
+    color: var(--muted);
 }
 
 .inline-total .total-value {
     font-weight: bold;
-    color: #d63031;
+    color: var(--danger);
     font-size: 1.1rem;
 }
 
@@ -434,7 +471,7 @@ td:last-child .btn {
 }
 
 .summary-card {
-    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    background: linear-gradient(135deg, var(--surface-2) 0%, var(--surface-2) 100%);
     border-radius: 10px;
     padding: 8px;
     min-width: 0;
@@ -442,7 +479,7 @@ td:last-child .btn {
 }
 
 .summary-card h3 {
-    color: #1a1a2e;
+    color: var(--fg);
     margin-bottom: 6px;
     font-size: 0.85rem;
     white-space: nowrap;
@@ -458,13 +495,13 @@ td:last-child .btn {
 }
 
 .summary-card {
-    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    background: linear-gradient(135deg, var(--surface-2) 0%, var(--surface-2) 100%);
     border-radius: 10px;
     padding: 12px;
 }
 
 .summary-card h3 {
-    color: #1a1a2e;
+    color: var(--fg);
     margin-bottom: 8px;
     font-size: 0.9rem;
 }
@@ -477,13 +514,13 @@ td:last-child .btn {
 }
 
 .total-unused {
-    color: #e74c3c;
+    color: var(--danger);
     font-weight: bold;
     font-size: 1rem;
 }
 
 .total-used {
-    color: #27ae60;
+    color: var(--success);
     font-size: 1rem;
 }
 
@@ -500,7 +537,7 @@ td:last-child .btn {
     align-items: center;
     gap: 4px;
     padding: 4px 6px;
-    background: white;
+    background: var(--surface);
     border-radius: 6px;
     font-size: 0.8rem;
 }
@@ -511,18 +548,18 @@ td:last-child .btn {
 
 .coupon-item.status-used .coupon-amt {
     text-decoration: line-through;
-    color: #999;
+    color: var(--muted-2);
 }
 
 .coupon-amt {
     font-weight: bold;
-    color: #e74c3c;
+    color: var(--danger);
     min-width: 32px;
     font-size: 0.85rem;
 }
 
 .coupon-date {
-    color: #666;
+    color: var(--muted);
     font-size: 0.7rem;
     flex-shrink: 0;
 }
@@ -552,13 +589,13 @@ td:last-child .btn {
 
 .summary-label {
     font-weight: bold;
-    color: #856404;
+    color: var(--warning-fg);
 }
 
 .summary-value {
     font-size: 1.2rem;
     font-weight: bold;
-    color: #d63031;
+    color: var(--danger);
 }
 
 /* 總覽網格 */
@@ -578,7 +615,7 @@ td:last-child .btn {
 }
 
 .summary-card h3 {
-    color: #1a1a2e;
+    color: var(--fg);
     margin-bottom: 8px;
     font-size: 0.9rem;
 }
@@ -591,12 +628,12 @@ td:last-child .btn {
 }
 
 .stat-unused {
-    color: #e74c3c;
+    color: var(--danger);
     font-weight: bold;
 }
 
 .stat-used {
-    color: #27ae60;
+    color: var(--success);
 }
 
 .coupon-list {
@@ -612,7 +649,7 @@ td:last-child .btn {
     align-items: center;
     gap: 6px;
     padding: 4px 6px;
-    background: #f8f9fa;
+    background: var(--surface-2);
     border-radius: 6px;
     font-size: 0.75rem;
 }
@@ -623,16 +660,16 @@ td:last-child .btn {
 }
 
 .coupon-amount.status-unused {
-    color: #e74c3c;
+    color: var(--danger);
 }
 
 .coupon-amount.status-used {
-    color: #999;
+    color: var(--muted-2);
     text-decoration: line-through;
 }
 
 .coupon-date {
-    color: #666;
+    color: var(--muted);
     font-size: 0.7rem;
 }
 
@@ -643,13 +680,13 @@ td:last-child .btn {
 }
 
 .coupon-status.status-unused {
-    background: #fff3cd;
-    color: #856404;
+    background: var(--warning-bg);
+    color: var(--warning-fg);
 }
 
 .coupon-status.status-used {
-    background: #d4edda;
-    color: #155724;
+    background: var(--success-bg);
+    color: var(--success-fg);
 }
 
 .coupon-row .btn {
@@ -677,7 +714,7 @@ td:last-child .btn {
 }
 
 .modal-content {
-    background: white;
+    background: var(--surface);
     padding: 25px;
     border-radius: 12px;
     width: 90%;
@@ -708,16 +745,16 @@ td:last-child .btn {
     right: 15px;
     font-size: 1.5rem;
     cursor: pointer;
-    color: #999;
+    color: var(--muted-2);
 }
 
 .close:hover {
-    color: #333;
+    color: var(--text);
 }
 
 .modal-content h2 {
     margin-bottom: 10px;
-    color: #1a1a2e;
+    color: var(--fg);
 }
 
 /* 確認對話框 */
@@ -729,7 +766,7 @@ td:last-child .btn {
 }
 
 #confirm-message {
-    color: #666;
+    color: var(--muted);
     margin: 15px 0;
     font-size: 0.9rem;
 }
@@ -738,7 +775,7 @@ td:last-child .btn {
 .empty-state {
     text-align: center;
     padding: 30px;
-    color: #999;
+    color: var(--muted-2);
     font-size: 0.9rem;
 }
 
@@ -850,8 +887,8 @@ td:last-child .btn {
 .toast {
     padding: 12px 20px;
     border-radius: 8px;
-    background: #333;
-    color: white;
+    background: var(--text);
+    color: var(--on-panel);
     font-size: 0.9rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     opacity: 0;
@@ -866,17 +903,17 @@ td:last-child .btn {
 }
 
 .toast-success {
-    background: linear-gradient(135deg, #28a745, #218838);
+    background: linear-gradient(135deg, var(--success), var(--success-dark));
 }
 
 .toast-error {
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    background: linear-gradient(135deg, var(--danger), var(--danger-dark));
 }
 
 .loading-state {
     text-align: center;
     padding: 30px;
-    color: #999;
+    color: var(--muted-2);
     font-size: 0.9rem;
 }
 
@@ -891,7 +928,7 @@ td:last-child .btn {
 }
 
 .page-info {
-    color: #666;
+    color: var(--muted);
     font-size: 0.85rem;
 }
 
@@ -906,4 +943,53 @@ td:last-child .btn {
     .toast {
         max-width: 100%;
     }
+}
+
+
+/* ── 主題：隨機抽色掣 ─────────────────────────────────────────── */
+.theme-btn {
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    color: var(--on-panel);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform .15s ease, background .2s ease;
+}
+.theme-btn:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
+.theme-btn:active {
+    transform: scale(0.94);
+}
+.theme-btn.spin {
+    animation: theme-spin .5s ease;
+}
+@keyframes theme-spin {
+    from { transform: rotate(0deg) scale(1); }
+    50%  { transform: rotate(180deg) scale(1.15); }
+    to   { transform: rotate(360deg) scale(1); }
+}
+/* 深色主題下，卡片陰影輕啲，避免糊成一團 */
+[data-theme="dark"] .container,
+[data-theme="dark"] .summary-card {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
+}
+
+/* 原生控件（select / date picker / 捲軸）跟主題：淺色主題用淺色控件，深色主題用深色控件。
+   冇呢兩行，深色主題下嘅 <select> 同日期輸入會照用淺色平台外觀，白底深字非常突兀。 */
+:root {
+    color-scheme: light;
+}
+[data-theme="dark"] {
+    color-scheme: dark;
+}
+
+/* 深色主題：下拉選單彈出嘅清單都要跟（option 唔繼承背景） */
+[data-theme="dark"] select option {
+    background: var(--surface);
+    color: var(--fg);
 }
