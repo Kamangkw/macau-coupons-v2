@@ -71,7 +71,7 @@
                                     <span>第1條</span>
                                     <select class="coupon-amount">
                                         <option value="">--</option>
-                                        {% for amount in coupon_amounts %}
+                                        {% for amount in coupon_options %}
                                         <option value="{{ amount }}">{{ amount_labels[amount] }}</option>
                                         {% endfor %}
                                     </select>
@@ -80,7 +80,7 @@
                                     <span>第2條</span>
                                     <select class="coupon-amount">
                                         <option value="">--</option>
-                                        {% for amount in coupon_amounts %}
+                                        {% for amount in coupon_options %}
                                         <option value="{{ amount }}">{{ amount_labels[amount] }}</option>
                                         {% endfor %}
                                     </select>
@@ -89,7 +89,7 @@
                                     <span>第3條</span>
                                     <select class="coupon-amount">
                                         <option value="">--</option>
-                                        {% for amount in coupon_amounts %}
+                                        {% for amount in coupon_options %}
                                         <option value="{{ amount }}">{{ amount_labels[amount] }}</option>
                                         {% endfor %}
                                     </select>

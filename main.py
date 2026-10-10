@@ -35,13 +35,23 @@ PLATFORMS = [
 # 舊有 amount = 0 嘅記錄會由 run_migrations() 一次性改成 12（其他欄位一律不變）。
 COUPON_AMOUNTS = [10, 12, 20, 50, 100, 200]
 
+# 「禮遇券」：非現金獎品，冇面額。內部用 -1 代表（唔可以用 0，因為遷移會將 0 當舊資料）。
+# 佢會計入張數，但唔會計入任何金額總和（見 get_summary 嘅 money case）。
+COURTESY_AMOUNT = -1
+
+# 下拉選項＝現金券面額 + 禮遇券
+COUPON_OPTIONS = COUPON_AMOUNTS + [COURTESY_AMOUNT]
+VALID_AMOUNTS = set(COUPON_OPTIONS)
+
 
 def amount_label(amount):
-    """獎項顯示名：12 元券寫成「$12券」（2026-10-10 偉仔指定），其餘照舊「N元」。"""
+    """獎項顯示名：禮遇券 / $12券 / N元（前端 app.js 嘅 amountLabel 要一致）。"""
+    if amount == COURTESY_AMOUNT:
+        return "禮遇券"
     return "$12券" if amount == 12 else f"{amount}元"
 
 
-AMOUNT_LABELS = {a: amount_label(a) for a in COUPON_AMOUNTS}
+AMOUNT_LABELS = {a: amount_label(a) for a in COUPON_OPTIONS}
 
 
 class User(db.Model):
@@ -91,7 +101,10 @@ class Coupon(db.Model):
             "draw_date": self.draw_date.isoformat() if self.draw_date else None,
             "is_used": self.is_used,
             "used_date": self.used_date.isoformat() if self.used_date else None,
-            "minimum_spend": self.amount * 3,
+            # 禮遇券冇最低消費（唔可以將 -1 乘 3）
+            "minimum_spend": 0
+            if self.amount == COURTESY_AMOUNT
+            else self.amount * 3,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
@@ -99,6 +112,7 @@ class Coupon(db.Model):
 # ── 一次性資料遷移（2026-10-10）─────────────────────────────────────
 # 舊「0 元」抽獎選項已改為 12 元消費券。只更新 amount = 0 嘅記錄；
 # id / user_id / platform / draw_date / is_used / used_date / created_at 一律唔動。
+# 注意：禮遇券用 -1，所以唔會被呢句誤中。
 _migration_done = False
 
 
@@ -176,7 +190,7 @@ def index():
     return render_template(
         "index.html",
         platforms=PLATFORMS,
-        coupon_amounts=COUPON_AMOUNTS,
+        coupon_options=COUPON_OPTIONS,
         amount_labels=AMOUNT_LABELS,
         user_name=user_name,
     )
@@ -291,13 +305,26 @@ def create_coupon():
     if len(coupons_data) == 0:
         return jsonify({"error": "請選擇券面額"}), 400
 
-    created = []
+    # 先全部驗證，避免半途插入
+    parsed = []
     for item in coupons_data:
+        try:
+            amount = int(item["amount"])
+            platform = item["platform"]
+            draw_date = datetime.strptime(item["draw_date"], "%Y-%m-%d").date()
+        except (KeyError, TypeError, ValueError):
+            return jsonify({"error": "記錄格式錯誤"}), 400
+        if amount not in VALID_AMOUNTS:
+            return jsonify({"error": "券面額無效"}), 400
+        parsed.append((platform, amount, draw_date))
+
+    created = []
+    for platform, amount, draw_date in parsed:
         coupon = Coupon(
             user_id=user_id,
-            platform=item["platform"],
-            amount=int(item["amount"]),
-            draw_date=datetime.strptime(item["draw_date"], "%Y-%m-%d").date(),
+            platform=platform,
+            amount=amount,
+            draw_date=draw_date,
         )
         db.session.add(coupon)
         created.append(coupon)
@@ -317,7 +344,13 @@ def update_coupon(id):
     if "platform" in data:
         coupon.platform = data["platform"]
     if "amount" in data:
-        coupon.amount = int(data["amount"])
+        try:
+            amount = int(data["amount"])
+        except (TypeError, ValueError):
+            return jsonify({"error": "券面額無效"}), 400
+        if amount not in VALID_AMOUNTS:
+            return jsonify({"error": "券面額無效"}), 400
+        coupon.amount = amount
     if "draw_date" in data:
         coupon.draw_date = datetime.strptime(data["draw_date"], "%Y-%m-%d").date()
     if "is_used" in data:
@@ -359,15 +392,18 @@ def get_summary():
     summary = []
     total_unused = 0
 
+    # 禮遇券（-1）唔計錢，當 0 計；張數照計
+    money = db.case((Coupon.amount == COURTESY_AMOUNT, 0), else_=Coupon.amount)
+
     for platform in PLATFORMS:
         result = (
             db.session.query(
-                db.func.sum(
-                    db.case((Coupon.is_used == False, Coupon.amount), else_=0)
-                ).label("unused_total"),
-                db.func.sum(
-                    db.case((Coupon.is_used == True, Coupon.amount), else_=0)
-                ).label("used_total"),
+                db.func.sum(db.case((Coupon.is_used == False, money), else_=0)).label(
+                    "unused_total"
+                ),
+                db.func.sum(db.case((Coupon.is_used == True, money), else_=0)).label(
+                    "used_total"
+                ),
                 db.func.count(db.case((Coupon.is_used == False, 1))).label(
                     "unused_count"
                 ),

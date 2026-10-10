@@ -382,7 +382,8 @@ function formatDateShort(dateStr) {
     return date.toLocaleDateString('zh-TW', { month: '2-digit', day: '2-digit' });
 }
 
-/** 獎項顯示名：12 元券顯示為「$12券」，其餘「N元」（要同後端 amount_label 一致） */
+/** 獎項顯示名：禮遇券 / $12券 / N元（要同後端 amount_label 一致；禮遇券內部值係 -1） */
 function amountLabel(amount) {
+    if (amount === -1) return '禮遇券';
     return amount === 12 ? '$12券' : amount + '元';
 }
