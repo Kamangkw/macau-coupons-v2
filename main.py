@@ -36,6 +36,14 @@ PLATFORMS = [
 COUPON_AMOUNTS = [10, 12, 20, 50, 100, 200]
 
 
+def amount_label(amount):
+    """獎項顯示名：12 元券寫成「$12券」（2026-10-10 偉仔指定），其餘照舊「N元」。"""
+    return "$12券" if amount == 12 else f"{amount}元"
+
+
+AMOUNT_LABELS = {a: amount_label(a) for a in COUPON_AMOUNTS}
+
+
 class User(db.Model):
     __tablename__ = "users"
 
@@ -169,6 +177,7 @@ def index():
         "index.html",
         platforms=PLATFORMS,
         coupon_amounts=COUPON_AMOUNTS,
+        amount_labels=AMOUNT_LABELS,
         user_name=user_name,
     )
 

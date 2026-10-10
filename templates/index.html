@@ -72,7 +72,7 @@
                                     <select class="coupon-amount">
                                         <option value="">--</option>
                                         {% for amount in coupon_amounts %}
-                                        <option value="{{ amount }}">{{ amount }}元</option>
+                                        <option value="{{ amount }}">{{ amount_labels[amount] }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -81,7 +81,7 @@
                                     <select class="coupon-amount">
                                         <option value="">--</option>
                                         {% for amount in coupon_amounts %}
-                                        <option value="{{ amount }}">{{ amount }}元</option>
+                                        <option value="{{ amount }}">{{ amount_labels[amount] }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -90,7 +90,7 @@
                                     <select class="coupon-amount">
                                         <option value="">--</option>
                                         {% for amount in coupon_amounts %}
-                                        <option value="{{ amount }}">{{ amount }}元</option>
+                                        <option value="{{ amount }}">{{ amount_labels[amount] }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>

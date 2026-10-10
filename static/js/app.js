@@ -178,7 +178,7 @@ function renderSummary(data) {
                     ? `<button class="btn btn-small btn-secondary" onclick="toggleCouponStatus(${c.id}, false)">未</button>`
                     : `<button class="btn btn-small btn-primary" onclick="toggleCouponStatus(${c.id}, true)">✓</button>`;
                 return `<div class="coupon-item ${statusClass}">
-                    <span class="coupon-amt">${c.amount}元</span>
+                    <span class="coupon-amt">${amountLabel(c.amount)}</span>
                     <span class="coupon-date">${formatDateShort(c.draw_date)}</span>
                     <div class="coupon-actions">
                         ${actionBtn}
@@ -380,4 +380,9 @@ async function clearAllCoupons() {
 function formatDateShort(dateStr) {
     const date = new Date(dateStr);
     return date.toLocaleDateString('zh-TW', { month: '2-digit', day: '2-digit' });
+}
+
+/** 獎項顯示名：12 元券顯示為「$12券」，其餘「N元」（要同後端 amount_label 一致） */
+function amountLabel(amount) {
+    return amount === 12 ? '$12券' : amount + '元';
 }
