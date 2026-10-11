@@ -452,6 +452,18 @@ async function refreshCalculator() {
     }
 }
 
+// 平台名變成可點連結：iOS 有 scheme 就一按直接開 app，否則去 App Store
+// （App Store 頁面如果 app 已裝，會顯示「開啟」，㩒一下就用得）
+function platformLink(platform, apps) {
+    const a = apps && apps[platform];
+    if (!a) return null;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS && a.scheme_ios) return { href: a.scheme_ios, external: false };
+    if (a.store) return { href: a.store, external: true };
+    return null;
+}
+
+
 function renderCalculator(d) {
     const box = document.getElementById('calc-result');
     const combo = d.combo || [];
@@ -466,9 +478,15 @@ function renderCalculator(d) {
             const label = (same && g.count > 1)
                 ? money(g.amounts[0]) + ' 券 ×' + g.count
                 : g.amounts.map(money).join(' ＋ ') + ' 券';
+            const link = platformLink(g.platform, d.platform_apps);
+            const nameHtml = link
+                ? '<a class="calc-plat-name calc-plat-link" href="' + link.href + '"' +
+                  (link.external ? ' target="_blank" rel="noopener"' : '') + '>' +
+                  g.platform + '</a>'
+                : '<span class="calc-plat-name">' + g.platform + '</span>';
             return '<li>' +
                 '<span class="calc-row-main">' +
-                    '<span class="calc-plat-name">' + g.platform + '</span>' +
+                    nameHtml +
                     '<span class="calc-pay-total">支付 ' + money(g.pay_total) + '</span>' +
                 '</span>' +
                 '<span class="calc-row-sub">' + label + ' · 現金 ' + money(g.cash) + '</span>' +

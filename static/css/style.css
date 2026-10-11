@@ -1126,6 +1126,17 @@ td:last-child .btn {
     color: var(--accent-2);
 }
 
+/* 平台名係可點連結（一按開對應 app） */
+.calc-plat-link {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+}
+
+.calc-plat-link:active {
+    opacity: 0.65;
+}
+
 .calc-pay-total {
     font-size: 19px;
     font-weight: 800;

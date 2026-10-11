@@ -33,6 +33,26 @@ PLATFORMS = [
     "中國銀行",
 ]
 
+# 平台 → 手機 app 連結（前端會將平台名變成可點連結，收銀時一按就開到對應 app）。
+#
+# scheme_ios：iOS 自訂 URL scheme。有填＝一按直接開 app；
+#             留空＝未經實測證實，改用 store（App Store 連結，入到去再㩒「開啟」）。
+#             ⚠️ 呢啲澳門 app 嘅 scheme 大多冇公開文件（MPay 官方 SDK 文件都只講
+#             「scheme 由澳門通提供」），胡亂填會令 Safari 彈「無法打開網頁」，
+#             所以留空比亂填好。想填之前，先喺 iPhone Safari 網址欄打個 scheme
+#             試下有冇開到 app，實測得到先填。已知可靠嘅只有支付寶。
+# store：App Store 頁（已用 iTunes Search API 核對過開發者係邊間機構）。
+PLATFORM_APPS = {
+    "Mpay": {"scheme_ios": "", "store": "https://apps.apple.com/mo/app/id1092594338"},
+    "UEpay": {"scheme_ios": "", "store": "https://apps.apple.com/mo/app/id1262244387"},
+    "支付寶": {"scheme_ios": "alipay://", "store": "https://apps.apple.com/mo/app/id333206289"},
+    "中國銀行": {"scheme_ios": "", "store": "https://apps.apple.com/mo/app/id479179008"},
+    "工商銀行": {"scheme_ios": "", "store": "https://apps.apple.com/mo/app/id584398176"},
+    "大豐銀行": {"scheme_ios": "", "store": "https://apps.apple.com/mo/app/id500132293"},
+    "國際銀行": {"scheme_ios": "", "store": "https://apps.apple.com/mo/app/id1014923812"},
+    "廣發銀行": {"scheme_ios": "", "store": "https://apps.apple.com/mo/app/id1002337256"},
+}
+
 # 2026-10-10：抽獎唔再出「0 元」選項，改為 12 元消費券。
 # 舊有 amount = 0 嘅記錄會由 run_migrations() 一次性改成 12（其他欄位一律不變）。
 COUPON_AMOUNTS = [10, 12, 20, 50, 100, 200]
@@ -785,6 +805,8 @@ def calculate_spend():
             "denominations": denomination_rules(amount, allow_special),
             "inventory": inventory,
             "allow_special": allow_special,
+            # 平台 → app 連結（前端將平台名變成可點連結）
+            "platform_apps": PLATFORM_APPS,
         }
     )
 
