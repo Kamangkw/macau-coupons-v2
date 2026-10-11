@@ -460,8 +460,8 @@ function renderCalculator(d) {
 
     const platformNote = combo.length
         ? (d.platform_count > 1
-            ? '，要轉 ' + d.platform_count + ' 個平台'
-            : '，一個平台搞掂')
+            ? '<span class="calc-nowrap">，要轉 ' + d.platform_count + ' 個平台</span>'
+            : '<span class="calc-nowrap">，一個平台搞掂</span>')
         : '';
 
     const headline = d.max_value > 0

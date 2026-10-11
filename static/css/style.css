@@ -1107,6 +1107,11 @@ td:last-child .btn {
     color: var(--accent);
 }
 
+/* 唔好喺「…要轉 2 個平台」中間斷行（alternative 句子長，要留返換行） */
+.calc-nowrap {
+    white-space: nowrap;
+}
+
 .calc-alt {
     margin: 0 0 12px;
     padding: 8px 10px;
