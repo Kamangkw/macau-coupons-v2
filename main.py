@@ -40,12 +40,14 @@ PLATFORMS = [
 #             ⚠️ 呢啲澳門 app 嘅 scheme 大多冇公開文件（MPay 官方 SDK 文件都只講
 #             「scheme 由澳門通提供」），胡亂填會令 Safari 彈「無法打開網頁」，
 #             所以留空比亂填好。想填之前，先喺 iPhone Safari 網址欄打個 scheme
-#             試下有冇開到 app，實測得到先填。已知可靠嘅只有支付寶。
+#             試下有冇開到 app，實測得到先填。
+#             2026-10-11 實測：支付寶用 alipay:// 按落去冇反應（偉仔報），
+#             所以暫時八個平台一律用 App Store 連結。
 # store：App Store 頁（已用 iTunes Search API 核對過開發者係邊間機構）。
 PLATFORM_APPS = {
     "Mpay": {"scheme_ios": "", "store": "https://apps.apple.com/mo/app/id1092594338"},
     "UEpay": {"scheme_ios": "", "store": "https://apps.apple.com/mo/app/id1262244387"},
-    "支付寶": {"scheme_ios": "alipay://", "store": "https://apps.apple.com/mo/app/id333206289"},
+    "支付寶": {"scheme_ios": "", "store": "https://apps.apple.com/mo/app/id333206289"},
     "中國銀行": {"scheme_ios": "", "store": "https://apps.apple.com/mo/app/id479179008"},
     "工商銀行": {"scheme_ios": "", "store": "https://apps.apple.com/mo/app/id584398176"},
     "大豐銀行": {"scheme_ios": "", "store": "https://apps.apple.com/mo/app/id500132293"},
