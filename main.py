@@ -142,12 +142,15 @@ def best_within(coupons, cap):
 
 
 def subset_options(coupons, amount):
-    """一個平台嘅可選組合清單：[(支付總數, 券值, [Coupon…]), …]
+    """一個平台嘅可選組合清單：[(支付總數, 券值, [Coupon…], 用完？), …]
 
     支付總數＝呢個平台最少要支付幾多：
       • 一般券：3 × 券總值（消費滿 3 倍先可以用）
       • 有 12 元券：max(3 × 券總值, 100)（12 元券要「單一平台支付滿 100」）
         ← 注意：當平台本身已經要支付 ≥100（3 倍 ≥100），12 元券係「免費搭車」
+
+    第 4 個元素「用完？」＝呢個組合會唔會用光該平台所有合資格未用券
+    （用光＝以後唔使再為呢個平台開 app）。
 
     假設：同一個平台嘅支付最多用 1 張 12 元券（滿減券一般每筆一次；
     如果實際可以疊多張，改 SPECIAL_MAX_PER_PAY 就得）。
@@ -168,29 +171,44 @@ def subset_options(coupons, amount):
             if current is None or len(cand) < len(current):
                 sums[nxt] = cand
 
-    options = [(0, 0, [])]
+    options = [(0, 0, [], False)]
     for total, combo in sums.items():
         if total == 0:
             continue
-        options.append((total * SPEND_MULTIPLIER, total, list(combo)))
+        options.append(
+            (total * SPEND_MULTIPLIER, total, list(combo), len(combo) == len(coupons))
+        )
     if specials:
         for total, combo in sums.items():
             cost = max(total * SPEND_MULTIPLIER, SPECIAL_MIN_SPEND)
             if cost > amount:
                 continue
-            options.append((cost, total + SPECIAL_AMOUNT, list(combo) + [specials[0]]))
+            picked = list(combo) + [specials[0]]
+            options.append(
+                (cost, total + SPECIAL_AMOUNT, picked, len(picked) == len(coupons))
+            )
     return options
 
 
+def _combo_score(state):
+    """組合排序分數：① 券值最大 ② 平台數最少 ③ 用完（清零）嘅平台最多 ④ 張數最少。
+
+    第 ③ 條係偉仔要求：同樣券值同平台數之下，寧願揀一個「今次可以用光」
+    嘅平台，因為用光之後就唔使再為佢開 app（例：A 有 $20/$20/$10、
+    B 只有 $20/$20，消費 $120 → 揀 B，B 清倉）。
+    """
+    value, plats, cleared, count = state[0], state[1], state[2], state[3]
+    return (value, -plats, cleared, -count)
+
+
 def pick_best_combo(unused_coupons, amount, allow_special):
-    """砌出最佳券組合，目標：① 券值最大 ② 平台數最少 ③ 張數最少。
+    """砌出最佳券組合，目標：① 券值最大 ② 平台數最少 ③ 用完嘅平台最多 ④ 張數最少。
 
     限制係「每個平台嘅支付總數」：一個平台支付 $X 只可以支撐
     3X 以內嘅一般券，或者（有 12 元券時）X 要去到 100。
     所以 $100 消費用唔到「$20 券（要支付 60）＋ $12 券（要支付 100）」＝ 160。
 
-    回傳 dict（picked / total_value / platform_count / groups / leftover /
-    alternative / unused_eligible）。
+    回傳 dict（picked / total_value / platform_count / groups / unused_eligible）。
     """
     empty = {
         "picked": [],
@@ -219,7 +237,7 @@ def pick_best_combo(unused_coupons, amount, allow_special):
     if not options:
         return empty
 
-    # 分組背包：cost → (券值, 平台數, 張數, 指派)。每個平台最多揀一個選項。
+    # 分組背包：cost → (券值, 平台數, 用完平台數, 張數, 指派)。每個平台最多揀一個選項。
     # 平台次序跟「最早抽到嘅券」，令同樣券值時 FIFO 決定邊個平台先。
     platform_order = sorted(
         options,
@@ -228,11 +246,11 @@ def pick_best_combo(unused_coupons, amount, allow_special):
             p,
         ),
     )
-    best = {0: (0, 0, 0, {})}
+    best = {0: (0, 0, 0, 0, {})}
     for platform in platform_order:
         updated = dict(best)
-        for cost, (value, plats, count, assign) in best.items():
-            for ocost, ovalue, ocombo in options[platform]:
+        for cost, (value, plats, cleared, count, assign) in best.items():
+            for ocost, ovalue, ocombo, ocleared in options[platform]:
                 if ocost == 0:
                     continue
                 ncost = cost + ocost
@@ -241,24 +259,23 @@ def pick_best_combo(unused_coupons, amount, allow_special):
                 cand = (
                     value + ovalue,
                     plats + 1,
+                    cleared + (1 if ocleared else 0),
                     count + len(ocombo),
-                    {**assign, platform: (ocost, ovalue, ocombo)},
+                    {**assign, platform: (ocost, ovalue, ocombo, ocleared)},
                 )
                 current = updated.get(ncost)
-                if current is None or (cand[0], -cand[1], -cand[2]) > (
-                    current[0], -current[1], -current[2]
-                ):
+                if current is None or _combo_score(cand) > _combo_score(current):
                     updated[ncost] = cand
         best = updated
 
-    best_cost = max(best, key=lambda c: (best[c][0], -best[c][1], -best[c][2]))
-    value, platform_count, _count, assign = best[best_cost]
+    best_cost = max(best, key=lambda c: _combo_score(best[c]))
+    value, platform_count, _cleared, _count, assign = best[best_cost]
 
     groups = []
     picked = []
     # 券值大嘅平台排前面；最後一個負責吸收零頭
     for platform in sorted(assign, key=lambda p: (-assign[p][1], p)):
-        ocost, ovalue, ocombo = assign[platform]
+        ocost, ovalue, ocombo, ocleared = assign[platform]
         picked.extend(ocombo)
         groups.append(
             {
@@ -269,6 +286,7 @@ def pick_best_combo(unused_coupons, amount, allow_special):
                 "pay_min": ocost,        # 規則上最少要支付幾多（3 倍／100）
                 "pay_total": ocost,      # 實際支付總數（下面會加零頭）
                 "cash": ocost - ovalue,
+                "cleared": ocleared,     # 呢個平台嘅券今次係唔係全部用光
             }
         )
 
