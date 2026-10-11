@@ -754,7 +754,14 @@ def get_summary():
             }
         )
 
-    return jsonify({"platforms": summary, "total_unused": total_unused})
+    return jsonify(
+        {
+            "platforms": summary,
+            "total_unused": total_unused,
+            # 平台 → app 連結（前端將平台名變成可點連結）
+            "platform_apps": PLATFORM_APPS,
+        }
+    )
 
 
 @app.route("/api/calculator", methods=["POST"])

@@ -1126,14 +1126,15 @@ td:last-child .btn {
     color: var(--accent-2);
 }
 
-/* 平台名係可點連結（一按開對應 app） */
-.calc-plat-link {
+/* 平台名係可點連結（一按開對應 app）：保留原本顏色，加底線做提示 */
+.plat-link {
+    color: inherit;
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 2px;
 }
 
-.calc-plat-link:active {
+.plat-link:active {
     opacity: 0.65;
 }
 

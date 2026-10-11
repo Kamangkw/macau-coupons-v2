@@ -166,6 +166,7 @@ async function loadSummary() {
 }
 
 function renderSummary(data) {
+    rememberPlatformApps(data.platform_apps);
     document.getElementById('total-unused').textContent = data.total_unused + ' 元';
     
     const grid = document.getElementById('summary-grid');
@@ -192,7 +193,7 @@ function renderSummary(data) {
             }).join('');
             
             card.innerHTML = `
-                <h3>${item.platform}</h3>
+                <h3>${platformNameHtml(item.platform, data.platform_apps)}</h3>
                 <div class="card-totals">
                     <span class="total-unused">未: ${item.total_coupon}元</span>
                     <span class="total-used">已: ${item.platform_total}元</span>
@@ -454,13 +455,31 @@ async function refreshCalculator() {
 
 // 平台名變成可點連結：iOS 有 scheme 就一按直接開 app，否則去 App Store
 // （App Store 頁面如果 app 已裝，會顯示「開啟」，㩒一下就用得）
+// mapping 由 /api/summary 或 /api/calculator 帶落嚟，cache 住共用。
+let PLATFORM_APPS = {};
+
+function rememberPlatformApps(apps) {
+    if (apps && Object.keys(apps).length) {
+        PLATFORM_APPS = apps;
+    }
+}
+
 function platformLink(platform, apps) {
-    const a = apps && apps[platform];
+    const a = (apps && Object.keys(apps).length ? apps : PLATFORM_APPS)[platform];
     if (!a) return null;
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     if (isIOS && a.scheme_ios) return { href: a.scheme_ios, external: false };
     if (a.store) return { href: a.store, external: true };
     return null;
+}
+
+// 冇連結就照舊純文字
+function platformNameHtml(platform, apps, className) {
+    const cls = className || 'plat-name';
+    const link = platformLink(platform, apps);
+    if (!link) return '<span class="' + cls + '">' + platform + '</span>';
+    return '<a class="' + cls + ' plat-link" href="' + link.href + '"' +
+        (link.external ? ' target="_blank" rel="noopener"' : '') + '>' + platform + '</a>';
 }
 
 
@@ -478,12 +497,7 @@ function renderCalculator(d) {
             const label = (same && g.count > 1)
                 ? money(g.amounts[0]) + ' 券 ×' + g.count
                 : g.amounts.map(money).join(' ＋ ') + ' 券';
-            const link = platformLink(g.platform, d.platform_apps);
-            const nameHtml = link
-                ? '<a class="calc-plat-name calc-plat-link" href="' + link.href + '"' +
-                  (link.external ? ' target="_blank" rel="noopener"' : '') + '>' +
-                  g.platform + '</a>'
-                : '<span class="calc-plat-name">' + g.platform + '</span>';
+            const nameHtml = platformNameHtml(g.platform, d.platform_apps, 'calc-plat-name');
             return '<li>' +
                 '<span class="calc-row-main">' +
                     nameHtml +
