@@ -469,20 +469,31 @@ function renderCalculator(d) {
           ' 張' + platformNote + '）'
         : '今次用唔到券，全部現金支付';
 
-    // 按平台分組顯示：一眼睇到邊個平台用邊幾張（＝要開幾多個 app）
+    // 每個平台一行：左邊係券，右邊係「呢個平台要支付幾多」（＋其中有幾多係現金）
     const comboHtml = groups.length
         ? '<ul class="calc-combo">' + groups.map((g) => {
             const same = g.amounts.every((a) => a === g.amounts[0]);
             const label = (same && g.count > 1)
                 ? money(g.amounts[0]) + ' ×' + g.count
                 : g.amounts.map(money).join(' ＋ ');
-            return '<li><span class="calc-plat-name">' + g.platform + '</span>' +
-                   '<span class="calc-chip">' + label + '</span></li>';
+            return '<li>' +
+                '<span class="calc-plat-left">' +
+                    '<span class="calc-plat-name">' + g.platform + '</span>' +
+                    '<span class="calc-chip">' + label + '</span>' +
+                '</span>' +
+                '<span class="calc-pay-total">支付 ' + money(g.pay_total) +
+                    '<i class="calc-cash">現金 ' + money(g.cash) + '</i>' +
+                '</span></li>';
         }).join('') + '</ul>'
         : '';
 
     const payHtml = '<p class="calc-pay">現金實付 <strong>' + money(d.pay_after) +
         '</strong>　（消費 ' + money(d.amount) + '）</p>';
+
+    const leftoverHtml = (d.leftover > 0 && combo.length)
+        ? '<p class="calc-leftover">另外 ' + money(d.leftover) +
+          ' 唔使配券：現金或任何平台支付都可以</p>'
+        : '';
 
     let altHtml = '';
     if (d.alternative) {
@@ -494,9 +505,9 @@ function renderCalculator(d) {
 
     let note = '';
     const anyUsable = (d.denominations || []).some((x) => x.usable);
-    if (d.max_value > 0 && d.max_value < d.cap) {
-        note = '<p class="calc-note">上限係 ' + money(d.cap) +
-            '，但你手上未用嘅券唔夠，所以最多用到 ' + money(d.max_value) + '。</p>';
+    if (d.unused_eligible > 0) {
+        note = '<p class="calc-note">仲有 ' + d.unused_eligible +
+            ' 張符合條件嘅券今次用唔到（受每個平台嘅支付金額限制）。</p>';
     } else if (d.max_value === 0 && anyUsable) {
         note = '<p class="calc-note">呢個金額符合條件，但你手上冇對應嘅未使用券。</p>';
     }
@@ -509,6 +520,7 @@ function renderCalculator(d) {
         '<p class="calc-big">' + headline + '</p>' +
         comboHtml +
         payHtml +
+        leftoverHtml +
         altHtml +
         '<div class="calc-rules">' + rules + '</div>' +
         note;
