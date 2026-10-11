@@ -455,20 +455,42 @@ async function refreshCalculator() {
 function renderCalculator(d) {
     const box = document.getElementById('calc-result');
     const combo = d.combo || [];
+    const groups = d.by_platform || [];
     const money = (n) => '$' + n;
 
+    const platformNote = combo.length
+        ? (d.platform_count > 1
+            ? '，要轉 ' + d.platform_count + ' 個平台'
+            : '，一個平台搞掂')
+        : '';
+
     const headline = d.max_value > 0
-        ? '今次可以用 <strong>' + money(d.max_value) + '</strong> 券（' + combo.length + ' 張）'
+        ? '今次可以用 <strong>' + money(d.max_value) + '</strong> 券（' + combo.length +
+          ' 張' + platformNote + '）'
         : '今次用唔到券，全部現金支付';
 
-    const comboHtml = combo.length
-        ? '<ul class="calc-combo">' + combo.map((c) =>
-            '<li><span class="calc-chip">' + amountLabel(c.amount) + '</span>' +
-            '<span class="calc-plat">' + c.platform + '</span></li>').join('') + '</ul>'
+    // 按平台分組顯示：一眼睇到邊個平台用邊幾張（＝要開幾多個 app）
+    const comboHtml = groups.length
+        ? '<ul class="calc-combo">' + groups.map((g) => {
+            const same = g.amounts.every((a) => a === g.amounts[0]);
+            const label = (same && g.count > 1)
+                ? money(g.amounts[0]) + ' ×' + g.count
+                : g.amounts.map(money).join(' ＋ ');
+            return '<li><span class="calc-plat-name">' + g.platform + '</span>' +
+                   '<span class="calc-chip">' + label + '</span></li>';
+        }).join('') + '</ul>'
         : '';
 
     const payHtml = '<p class="calc-pay">現金實付 <strong>' + money(d.pay_after) +
         '</strong>　（消費 ' + money(d.amount) + '）</p>';
+
+    let altHtml = '';
+    if (d.alternative) {
+        const a = d.alternative;
+        altHtml = '<p class="calc-alt">想少轉一個平台：<strong>' + a.platform + '</strong> ' +
+            a.amounts.map(money).join(' ＋ ') + '（少用 ' +
+            money(d.max_value - a.max_value) + '，實付 ' + money(a.pay_after) + '）</p>';
+    }
 
     let note = '';
     const anyUsable = (d.denominations || []).some((x) => x.usable);
@@ -487,6 +509,7 @@ function renderCalculator(d) {
         '<p class="calc-big">' + headline + '</p>' +
         comboHtml +
         payHtml +
+        altHtml +
         '<div class="calc-rules">' + rules + '</div>' +
         note;
 }

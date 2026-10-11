@@ -4,6 +4,7 @@ Flask 後端應用程式
 """
 
 import json
+import itertools
 import os
 import sys
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
@@ -113,47 +114,95 @@ def reason_for(value, amount, allow_special, usable):
     return f"需消費滿 {minimum_spend_for(value)} 元"
 
 
-def pick_best_combo(unused_coupons, amount, allow_special):
-    """喺券總值上限內，用未使用嘅券砌出最大券值組合。
+def coupon_eligible(coupon, amount, allow_special):
+    """呢張券喺呢筆消費之下用唔用得（禮遇券唔參與金額計算）。"""
+    if coupon.amount == COURTESY_AMOUNT:
+        return False
+    if coupon.amount == SPECIAL_AMOUNT:
+        return amount >= SPECIAL_MIN_SPEND and allow_special
+    return True
 
-    回傳 (揀中嘅 Coupon 物件清單, 券總值)。同樣券值之下會揀較少張數。
+
+def best_within(coupons, cap):
+    """0/1 背包：喺 cap 之內揀最大券值；同樣總值之下揀較少張數。
+
+    回傳 (總值, [Coupon…])。輸入次序＝偏好次序（最早抽到嗰張喺最前）。
     """
-    cap = amount // SPEND_MULTIPLIER
-    pool = []
-    for c in unused_coupons:
-        if c.amount == COURTESY_AMOUNT:
-            continue  # 禮遇券冇面額，唔參與計算
-        if c.amount == SPECIAL_AMOUNT and not (amount >= SPECIAL_MIN_SPEND and allow_special):
-            continue
-        pool.append(c)
-    if not pool or cap <= 0:
-        return [], 0
-
-    cap = min(cap, sum(c.amount for c in pool))
-    # 0/1 背包：dp[總值] = 用咗邊啲面額。由大到細行，確保同一張券唔會重複用。
     dp = {0: []}
-    for c in pool:
+    for c in coupons:
         for total in sorted(dp, reverse=True):
             nxt = total + c.amount
             if nxt > cap:
                 continue
-            cand = dp[total] + [c.amount]
+            cand = dp[total] + [c]
             current = dp.get(nxt)
             if current is None or len(cand) < len(current):
                 dp[nxt] = cand
-    best_total = max(dp)
-    wanted = sorted(dp[best_total], reverse=True)
+    best = max(dp)
+    return best, dp[best]
 
-    # 面額對應返真實券：同一面額用最早抽到嘅先（FIFO）
-    buckets = {}
-    for c in sorted(unused_coupons, key=lambda x: (x.draw_date or date.min, x.id)):
-        buckets.setdefault(c.amount, []).append(c)
-    picked = []
-    for value in wanted:
-        bucket = buckets.get(value) or []
-        if bucket:
-            picked.append(bucket.pop(0))
-    return picked, sum(c.amount for c in picked)
+
+def pick_best_combo(unused_coupons, amount, allow_special):
+    """砌出最佳券組合，排序目標：① 券值最大 ② 平台數最少 ③ 張數最少。
+
+    「平台數最少」＝喺收銀處要轉幾多次支付平台，所以係次優先目標。
+    回傳 (combo, 券總值, 平台數, alternative)。
+    alternative = 只用「一個平台」嘅最佳方案；只有喺券值低過主方案時先會出現
+    （畀用戶自己揀「少轉一個平台、少慳幾蚊」）。
+    """
+    cap = amount // SPEND_MULTIPLIER
+    pool = [c for c in unused_coupons if coupon_eligible(c, amount, allow_special)]
+    if not pool or cap <= 0:
+        return [], 0, 0, None
+
+    # FIFO：最早抽到嘅排最前（背包同樣總值時會保留最先遇到嘅組合）
+    pool.sort(key=lambda c: (c.draw_date or date.min, c.id))
+    cap = min(cap, sum(c.amount for c in pool))
+
+    best_value, best_combo = best_within(pool, cap)
+    if best_value == 0:
+        return [], 0, 0, None
+
+    platforms = sorted({c.platform for c in pool})
+    picked = best_combo
+    # 由「1 個平台」開始試，搵第一個做得到最佳券值嘅平台組合 → 平台數最少
+    for size in range(1, len(platforms) + 1):
+        hits = []
+        for group in itertools.combinations(platforms, size):
+            subset = [c for c in pool if c.platform in group]
+            value, chosen = best_within(subset, cap)
+            if value == best_value:
+                hits.append((len(chosen), group, chosen))
+        if hits:
+            hits.sort(key=lambda item: (item[0], item[1]))
+            picked = hits[0][2]
+            break
+
+    alternative = None
+    single = None
+    for platform in platforms:
+        value, chosen = best_within([c for c in pool if c.platform == platform], cap)
+        if value and (
+            single is None
+            or value > single[0]
+            or (value == single[0] and len(chosen) < len(single[1]))
+        ):
+            single = (value, chosen, platform)
+    if single and single[0] < best_value:
+        alternative = {
+            "platform": single[2],
+            "max_value": single[0],
+            "pay_after": amount - single[0],
+            "count": len(single[1]),
+            "amounts": [c.amount for c in single[1]],
+        }
+
+    return (
+        picked,
+        sum(c.amount for c in picked),
+        len({c.platform for c in picked}),
+        alternative,
+    )
 
 
 
@@ -612,12 +661,27 @@ def calculate_spend():
         .order_by(Coupon.draw_date.asc(), Coupon.id.asc())
         .all()
     )
-    picked, total_value = pick_best_combo(unused, amount, allow_special)
+    picked, total_value, platform_count, alternative = pick_best_combo(
+        unused, amount, allow_special
+    )
 
     inventory = {}
     for coupon in unused:
         key = str(coupon.amount)
         inventory[key] = inventory.get(key, 0) + 1
+
+    # 按平台分組：前端一眼睇到「邊個平台用邊幾張」，同埋要轉幾多次平台
+    by_platform = []
+    for platform in sorted({c.platform for c in picked}):
+        group = [c for c in picked if c.platform == platform]
+        by_platform.append(
+            {
+                "platform": platform,
+                "count": len(group),
+                "total": sum(c.amount for c in group),
+                "amounts": sorted((c.amount for c in group), reverse=True),
+            }
+        )
 
     return jsonify(
         {
@@ -626,6 +690,9 @@ def calculate_spend():
             "max_value": total_value,
             "pay_after": amount - total_value,
             "combo": [c.to_dict() for c in picked],
+            "by_platform": by_platform,
+            "platform_count": platform_count,
+            "alternative": alternative,
             "denominations": denomination_rules(amount, allow_special),
             "inventory": inventory,
             "allow_special": allow_special,

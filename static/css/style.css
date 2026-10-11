@@ -1102,6 +1102,25 @@ td:last-child .btn {
     color: var(--fg);
 }
 
+.calc-plat-name {
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.calc-alt {
+    margin: 0 0 12px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    font-size: 13px;
+    color: var(--text);
+}
+
+.calc-alt strong {
+    color: var(--accent);
+}
+
 .calc-plat {
     font-size: 12px;
     color: var(--muted);
