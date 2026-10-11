@@ -458,15 +458,15 @@ function renderCalculator(d) {
     const groups = d.by_platform || [];
     const money = (n) => '$' + n;
 
-    const platformNote = combo.length
-        ? (d.platform_count > 1
-            ? '<span class="calc-nowrap">，要轉 ' + d.platform_count + ' 個平台</span>'
-            : '<span class="calc-nowrap">，一個平台搞掂</span>')
+    const countNote = combo.length
+        ? '<span class="calc-nowrap">' + combo.length + ' 張' +
+          (d.platform_count > 1
+              ? '，要轉 ' + d.platform_count + ' 個平台'
+              : '，一個平台搞掂') + '</span>'
         : '';
 
     const headline = d.max_value > 0
-        ? '今次可以用 <strong>' + money(d.max_value) + '</strong> 券（' + combo.length +
-          ' 張' + platformNote + '）'
+        ? '今次可以用 <strong>' + money(d.max_value) + '</strong> 券（' + countNote + '）'
         : '今次用唔到券，全部現金支付';
 
     // 每個平台一行：左邊係券，右邊係「呢個平台要支付幾多」（＋其中有幾多係現金）
@@ -490,38 +490,8 @@ function renderCalculator(d) {
     const payHtml = '<p class="calc-pay">現金實付 <strong>' + money(d.pay_after) +
         '</strong>　（消費 ' + money(d.amount) + '）</p>';
 
-    const leftoverHtml = (d.leftover > 0 && combo.length)
-        ? '<p class="calc-leftover">另外 ' + money(d.leftover) +
-          ' 唔使配券：現金或任何平台支付都可以</p>'
-        : '';
-
-    let altHtml = '';
-    if (d.alternative) {
-        const a = d.alternative;
-        altHtml = '<p class="calc-alt">想少轉一個平台：<strong>' + a.platform + '</strong> ' +
-            a.amounts.map(money).join(' ＋ ') + '（少用 ' +
-            money(d.max_value - a.max_value) + '，實付 ' + money(a.pay_after) + '）</p>';
-    }
-
-    let note = '';
-    const anyUsable = (d.denominations || []).some((x) => x.usable);
-    if (d.unused_eligible > 0) {
-        note = '<p class="calc-note">仲有 ' + d.unused_eligible +
-            ' 張符合條件嘅券今次用唔到（受每個平台嘅支付金額限制）。</p>';
-    } else if (d.max_value === 0 && anyUsable) {
-        note = '<p class="calc-note">呢個金額符合條件，但你手上冇對應嘅未使用券。</p>';
-    }
-
-    const rules = (d.denominations || []).map((x) =>
-        '<span class="calc-rule ' + (x.usable ? 'ok' : 'no') + '">' + x.label +
-        (x.usable ? ' 可用' : ' ✗ ' + x.reason) + '</span>').join('');
-
     box.innerHTML =
         '<p class="calc-big">' + headline + '</p>' +
         comboHtml +
-        payHtml +
-        leftoverHtml +
-        altHtml +
-        '<div class="calc-rules">' + rules + '</div>' +
-        note;
+        payHtml;
 }

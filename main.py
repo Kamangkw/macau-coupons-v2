@@ -197,8 +197,6 @@ def pick_best_combo(unused_coupons, amount, allow_special):
         "total_value": 0,
         "platform_count": 0,
         "groups": [],
-        "leftover": amount,
-        "alternative": None,
         "unused_eligible": 0,
     }
     pool = [c for c in unused_coupons if coupon_eligible(c, amount, allow_special)]
@@ -258,7 +256,8 @@ def pick_best_combo(unused_coupons, amount, allow_special):
 
     groups = []
     picked = []
-    for platform in sorted(assign):
+    # 券值大嘅平台排前面；最後一個負責吸收零頭
+    for platform in sorted(assign, key=lambda p: (-assign[p][1], p)):
         ocost, ovalue, ocombo = assign[platform]
         picked.extend(ocombo)
         groups.append(
@@ -267,36 +266,25 @@ def pick_best_combo(unused_coupons, amount, allow_special):
                 "count": len(ocombo),
                 "total": ovalue,
                 "amounts": sorted((c.amount for c in ocombo), reverse=True),
-                "pay_total": ocost,        # 呢個平台最少要支付幾多
-                "cash": ocost - ovalue,    # 其中現金幾多
+                "pay_min": ocost,        # 規則上最少要支付幾多（3 倍／100）
+                "pay_total": ocost,      # 實際支付總數（下面會加零頭）
+                "cash": ocost - ovalue,
             }
         )
 
-    # 只用一個平台嘅最佳方案（畀用戶揀「少轉一個平台」）
-    single = None
-    for platform, usable in options.items():
-        for ocost, ovalue, ocombo in usable:
-            if ovalue == 0 or ocost == 0:
-                continue
-            if single is None or (ovalue, -len(ocombo)) > (single["max_value"], -single["count"]):
-                single = {
-                    "platform": platform,
-                    "max_value": ovalue,
-                    "count": len(ocombo),
-                    "amounts": sorted((c.amount for c in ocombo), reverse=True),
-                    "pay_total": ocost,
-                    "cash": ocost - ovalue,
-                    "pay_after": amount - ovalue,
-                }
-    alternative = single if single and single["max_value"] < value else None
+    # 零頭撥入最後一個平台，令各平台支付總數加起來剛剛好等於消費金額
+    if groups:
+        remainder = amount - best_cost
+        if remainder > 0:
+            last = groups[-1]
+            last["pay_total"] += remainder
+            last["cash"] = last["pay_total"] - last["total"]
 
     return {
         "picked": picked,
         "total_value": value,
         "platform_count": platform_count,
         "groups": groups,
-        "leftover": amount - best_cost,
-        "alternative": alternative,
         "unused_eligible": len(pool) - len(picked),
     }
 
@@ -772,13 +760,10 @@ def calculate_spend():
             "max_value": result["total_value"],
             "pay_after": amount - result["total_value"],
             "combo": [c.to_dict() for c in picked],
-            # 每個平台：券 + 該平台要支付幾多（pay_total）同其中現金幾多（cash）
+            # 每個平台：券 + 實際支付總數（pay_total，最後一個已含零頭）同其中現金
             "by_platform": result["groups"],
             "platform_count": result["platform_count"],
-            # 券覆蓋唔到、要用現金或任何平台支付嘅餘額
-            "leftover": result["leftover"],
             "unused_eligible": result["unused_eligible"],
-            "alternative": result["alternative"],
             "denominations": denomination_rules(amount, allow_special),
             "inventory": inventory,
             "allow_special": allow_special,
