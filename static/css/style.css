@@ -1071,15 +1071,22 @@ td:last-child .btn {
     color: var(--danger);
 }
 
-.calc-big {
-    margin: 0 0 12px;
-    font-size: 15px;
+.calc-pay {
+    margin: 0;
+    font-size: 14px;
     color: var(--text);
 }
 
-.calc-big strong {
-    font-size: 26px;
-    color: var(--accent);
+.calc-pay strong {
+    font-size: 17px;
+    color: var(--success-fg);
+}
+
+/* 最底細字：用券總額（唔係重點，所以最細最淡） */
+.calc-caption {
+    margin: 8px 0 0;
+    font-size: 12px;
+    color: var(--muted);
 }
 
 .calc-combo {
@@ -1132,18 +1139,3 @@ td:last-child .btn {
     color: var(--muted);
 }
 
-.calc-pay {
-    margin: 0;
-    font-size: 14px;
-    color: var(--text);
-}
-
-.calc-pay strong {
-    font-size: 17px;
-    color: var(--success-fg);
-}
-
-/* 唔好喺「…2 張，要轉 2 個平台」中間斷行 */
-.calc-nowrap {
-    white-space: nowrap;
-}

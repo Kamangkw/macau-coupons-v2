@@ -458,17 +458,6 @@ function renderCalculator(d) {
     const groups = d.by_platform || [];
     const money = (n) => '$' + n;
 
-    const countNote = combo.length
-        ? '<span class="calc-nowrap">' + combo.length + ' 張' +
-          (d.platform_count > 1
-              ? '，要轉 ' + d.platform_count + ' 個平台'
-              : '，一個平台搞掂') + '</span>'
-        : '';
-
-    const headline = d.max_value > 0
-        ? '今次可以用 <strong>' + money(d.max_value) + '</strong> 券（' + countNote + '）'
-        : '今次用唔到券，全部現金支付';
-
     // 每個平台一行：主角係「平台 + 支付總數」（收銀時最關鍵），
     // 券同現金退為下面一行細字
     const comboHtml = groups.length
@@ -487,11 +476,13 @@ function renderCalculator(d) {
         }).join('') + '</ul>'
         : '';
 
+    // 用券總額唔係重點（偉仔講嘅）→ 降做最底一行細字；平台行才係主角
+    const caption = combo.length
+        ? '<p class="calc-caption">用券 ' + money(d.max_value) + '</p>'
+        : '<p class="calc-caption">今次用唔到券，全部現金支付</p>';
+
     const payHtml = '<p class="calc-pay">現金實付 <strong>' + money(d.pay_after) +
         '</strong>　（消費 ' + money(d.amount) + '）</p>';
 
-    box.innerHTML =
-        '<p class="calc-big">' + headline + '</p>' +
-        comboHtml +
-        payHtml;
+    box.innerHTML = comboHtml + payHtml + caption;
 }
