@@ -469,21 +469,21 @@ function renderCalculator(d) {
         ? '今次可以用 <strong>' + money(d.max_value) + '</strong> 券（' + countNote + '）'
         : '今次用唔到券，全部現金支付';
 
-    // 每個平台一行：左邊係券，右邊係「呢個平台要支付幾多」（＋其中有幾多係現金）
+    // 每個平台一行：主角係「平台 + 支付總數」（收銀時最關鍵），
+    // 券同現金退為下面一行細字
     const comboHtml = groups.length
         ? '<ul class="calc-combo">' + groups.map((g) => {
             const same = g.amounts.every((a) => a === g.amounts[0]);
             const label = (same && g.count > 1)
-                ? money(g.amounts[0]) + ' ×' + g.count
-                : g.amounts.map(money).join(' ＋ ');
+                ? money(g.amounts[0]) + ' 券 ×' + g.count
+                : g.amounts.map(money).join(' ＋ ') + ' 券';
             return '<li>' +
-                '<span class="calc-plat-left">' +
+                '<span class="calc-row-main">' +
                     '<span class="calc-plat-name">' + g.platform + '</span>' +
-                    '<span class="calc-chip">' + label + '</span>' +
+                    '<span class="calc-pay-total">支付 ' + money(g.pay_total) + '</span>' +
                 '</span>' +
-                '<span class="calc-pay-total">支付 ' + money(g.pay_total) +
-                    '<i class="calc-cash">現金 ' + money(g.cash) + '</i>' +
-                '</span></li>';
+                '<span class="calc-row-sub">' + label + ' · 現金 ' + money(g.cash) + '</span>' +
+            '</li>';
         }).join('') + '</ul>'
         : '';
 

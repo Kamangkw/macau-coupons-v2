@@ -1093,49 +1093,42 @@ td:last-child .btn {
 
 .calc-combo li {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 3px;
     width: 100%;
     box-sizing: border-box;
-    padding: 9px 12px;
+    padding: 11px 13px;
     border: 1px solid var(--line);
     border-radius: 10px;
     background: var(--surface);
     font-size: 14px;
 }
 
-.calc-plat-left {
+/* 主角：平台名 + 支付總數（收銀時最關鍵嘅兩個資訊） */
+.calc-row-main {
     display: flex;
-    align-items: center;
-    gap: 7px;
-    min-width: 0;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
 }
 
 .calc-plat-name {
-    font-weight: 600;
-    color: var(--accent);
-}
-
-.calc-chip {
+    font-size: 15px;
     font-weight: 700;
-    color: var(--fg);
+    color: var(--accent-2);
 }
 
-/* 平台右邊嘅「支付總數」（下面一行細字係其中嘅現金） */
 .calc-pay-total {
-    text-align: right;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 19px;
+    font-weight: 800;
     color: var(--fg);
     white-space: nowrap;
 }
 
-.calc-cash {
-    display: block;
-    font-style: normal;
-    font-weight: 400;
-    font-size: 11.5px;
+/* 配角：用咗邊張券、其中現金幾多 */
+.calc-row-sub {
+    font-size: 12px;
     color: var(--muted);
 }
 
