@@ -112,6 +112,30 @@
                 </div>
             </div>
             <div class="summary-grid" id="summary-grid"></div>
+
+            <!-- 消費計算器（2026-10-11）-->
+            <div class="collapsible-section" id="calc-section">
+                <div class="section-header-row">
+                    <h3 style="color: var(--fg);">🧮 消費計算器</h3>
+                    <span class="calc-hint">一般券：券值 × 3 ≤ 消費額</span>
+                </div>
+                <div class="calc-body">
+                    <div class="calc-inputs">
+                        <div class="form-group">
+                            <label for="calc-amount">今次消費金額（MOP）</label>
+                            <input type="number" id="calc-amount" inputmode="decimal"
+                                   min="1" step="1" placeholder="例如 60" autocomplete="off">
+                        </div>
+                        <label class="calc-toggle" for="calc-allow-special">
+                            <input type="checkbox" id="calc-allow-special">
+                            <span>商舖允許用 $12 券</span>
+                        </label>
+                    </div>
+                    <div id="calc-result" class="calc-result">
+                        <p class="calc-placeholder">輸入消費金額，即刻睇今次可以用幾多券</p>
+                    </div>
+                </div>
+            </div>
         </section>
     </div>
 

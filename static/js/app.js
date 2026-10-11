@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     checkLoginStatus();
     document.getElementById('login-form').addEventListener('submit', handleLogin);
     document.getElementById('coupon-form').addEventListener('submit', handleCouponSubmit);
+    initCalculator();
     const now = new Date();
     const macauTime = new Date(now.toLocaleString('zh-TW', { timeZone: 'Asia/Hong_Kong' }));
     document.getElementById('coupon-date').valueAsDate = macauTime;
@@ -158,6 +159,7 @@ async function loadSummary() {
         }
         const data = await response.json();
         renderSummary(data);
+        refreshCalculator();   // 券有變動時，計算器跟住更新
     } catch (error) {
         console.error('載入摘要失敗:', error);
     }
@@ -388,4 +390,103 @@ function formatDateShort(dateStr) {
 function amountLabel(amount) {
     if (amount === -1) return '禮遇券';
     return amount === 12 ? '$12券' : amount + '元';
+}
+
+/* ── 消費計算器（2026-10-11）─────────────────────────────────
+   規則同後端 main.py 保持一致：
+     • 一般券：整筆消費嘅「券總值 × 3」唔可以超過消費額
+     • $12 券例外：要消費滿 100 元（而且商舖允許，用 checkbox 控制）
+     • 可以疊用、跨平台分開支付疊用；只用「未使用」嘅券
+   後端負責砌最佳組合，前端只負責顯示。 */
+const CALC_DEBOUNCE_MS = 250;
+let calcTimer = null;
+let calcTicket = 0;
+
+function initCalculator() {
+    const input = document.getElementById('calc-amount');
+    const toggle = document.getElementById('calc-allow-special');
+    if (!input || !toggle) return;
+    input.addEventListener('input', () => {
+        clearTimeout(calcTimer);
+        calcTimer = setTimeout(refreshCalculator, CALC_DEBOUNCE_MS);
+    });
+    toggle.addEventListener('change', refreshCalculator);
+}
+
+function calcAmount() {
+    const input = document.getElementById('calc-amount');
+    const value = Number(input ? input.value : '');
+    return Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+async function refreshCalculator() {
+    const box = document.getElementById('calc-result');
+    if (!box) return;
+
+    const amount = calcAmount();
+    if (!amount) {
+        box.innerHTML = '<p class="calc-placeholder">輸入消費金額，即刻睇今次可以用幾多券</p>';
+        return;
+    }
+
+    const allowSpecial = document.getElementById('calc-allow-special').checked;
+    const ticket = ++calcTicket;
+    try {
+        const response = await fetch(API_BASE + '/calculator', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount: amount, allow_special: allowSpecial })
+        });
+        const data = await response.json();
+        if (ticket !== calcTicket) return;   // 只認最新一次請求，避免打字時舊結果蓋新結果
+        if (!response.ok) {
+            box.innerHTML = '<p class="calc-error">' + (data.error || '計唔到，請再試') + '</p>';
+            return;
+        }
+        renderCalculator(data);
+    } catch (error) {
+        console.error('計算器失敗:', error);
+        if (ticket === calcTicket) {
+            box.innerHTML = '<p class="calc-error">網絡問題，請再試</p>';
+        }
+    }
+}
+
+function renderCalculator(d) {
+    const box = document.getElementById('calc-result');
+    const combo = d.combo || [];
+    const money = (n) => '$' + n;
+
+    const headline = d.max_value > 0
+        ? '今次可以用 <strong>' + money(d.max_value) + '</strong> 券（' + combo.length + ' 張）'
+        : '今次用唔到券，全部現金支付';
+
+    const comboHtml = combo.length
+        ? '<ul class="calc-combo">' + combo.map((c) =>
+            '<li><span class="calc-chip">' + amountLabel(c.amount) + '</span>' +
+            '<span class="calc-plat">' + c.platform + '</span></li>').join('') + '</ul>'
+        : '';
+
+    const payHtml = '<p class="calc-pay">現金實付 <strong>' + money(d.pay_after) +
+        '</strong>　（消費 ' + money(d.amount) + '）</p>';
+
+    let note = '';
+    const anyUsable = (d.denominations || []).some((x) => x.usable);
+    if (d.max_value > 0 && d.max_value < d.cap) {
+        note = '<p class="calc-note">上限係 ' + money(d.cap) +
+            '，但你手上未用嘅券唔夠，所以最多用到 ' + money(d.max_value) + '。</p>';
+    } else if (d.max_value === 0 && anyUsable) {
+        note = '<p class="calc-note">呢個金額符合條件，但你手上冇對應嘅未使用券。</p>';
+    }
+
+    const rules = (d.denominations || []).map((x) =>
+        '<span class="calc-rule ' + (x.usable ? 'ok' : 'no') + '">' + x.label +
+        (x.usable ? ' 可用' : ' ✗ ' + x.reason) + '</span>').join('');
+
+    box.innerHTML =
+        '<p class="calc-big">' + headline + '</p>' +
+        comboHtml +
+        payHtml +
+        '<div class="calc-rules">' + rules + '</div>' +
+        note;
 }

@@ -55,6 +55,108 @@ def amount_label(amount):
 AMOUNT_LABELS = {a: amount_label(a) for a in COUPON_OPTIONS}
 
 
+# ── 消費計算器規則（2026-10-11）─────────────────────────────────────
+# 偉仔確認嘅實際規則：
+#   1. 一般券（10/20/50/100/200）：整筆消費嘅「券總值 × 3」唔可以超過消費額
+#      （即係每張券背後要有 3 倍消費支撐；疊用時睇總值，例：消費 60 最多用 20 元券）
+#   2. 12 元券係例外：改為「消費滿 100 元」＋「商舖允許」先可以用，
+#      但仍然計入上面嘅券總值上限（唔係額外豁免）
+#   3. 券可以疊用，跨平台分開支付都可以疊
+SPEND_MULTIPLIER = 3
+SPECIAL_AMOUNT = 12
+SPECIAL_MIN_SPEND = 100
+MAX_CALC_AMOUNT = 1_000_000
+
+
+def minimum_spend_for(value):
+    """單張券嘅最低消費：禮遇券 0、12 元券 100（另需商舖允許）、其餘＝面額 × 3。"""
+    if value == COURTESY_AMOUNT:
+        return 0
+    if value == SPECIAL_AMOUNT:
+        return SPECIAL_MIN_SPEND
+    return value * SPEND_MULTIPLIER
+
+
+def denomination_rules(amount, allow_special=False):
+    """呢筆消費之下，每個面額用唔用得同所需最低消費。"""
+    rows = []
+    for value in COUPON_AMOUNTS:
+        required = minimum_spend_for(value)
+        if value == SPECIAL_AMOUNT:
+            usable = amount >= required and allow_special
+        else:
+            usable = amount >= required
+        rows.append(
+            {
+                "amount": value,
+                "label": amount_label(value),
+                "usable": usable,
+                "required_spend": required,
+                "special": value == SPECIAL_AMOUNT,
+                "reason": reason_for(value, amount, allow_special, usable),
+            }
+        )
+    return rows
+
+
+def reason_for(value, amount, allow_special, usable):
+    """唔可用時解釋點解，可用時畀個簡短原因（前端顯示用）。"""
+    if usable:
+        return "已符合條件"
+    if value == SPECIAL_AMOUNT:
+        needs = []
+        if amount < SPECIAL_MIN_SPEND:
+            needs.append(f"需消費滿 {SPECIAL_MIN_SPEND} 元")
+        if not allow_special:
+            needs.append("需商舖允許")
+        return "＋".join(needs)
+    return f"需消費滿 {minimum_spend_for(value)} 元"
+
+
+def pick_best_combo(unused_coupons, amount, allow_special):
+    """喺券總值上限內，用未使用嘅券砌出最大券值組合。
+
+    回傳 (揀中嘅 Coupon 物件清單, 券總值)。同樣券值之下會揀較少張數。
+    """
+    cap = amount // SPEND_MULTIPLIER
+    pool = []
+    for c in unused_coupons:
+        if c.amount == COURTESY_AMOUNT:
+            continue  # 禮遇券冇面額，唔參與計算
+        if c.amount == SPECIAL_AMOUNT and not (amount >= SPECIAL_MIN_SPEND and allow_special):
+            continue
+        pool.append(c)
+    if not pool or cap <= 0:
+        return [], 0
+
+    cap = min(cap, sum(c.amount for c in pool))
+    # 0/1 背包：dp[總值] = 用咗邊啲面額。由大到細行，確保同一張券唔會重複用。
+    dp = {0: []}
+    for c in pool:
+        for total in sorted(dp, reverse=True):
+            nxt = total + c.amount
+            if nxt > cap:
+                continue
+            cand = dp[total] + [c.amount]
+            current = dp.get(nxt)
+            if current is None or len(cand) < len(current):
+                dp[nxt] = cand
+    best_total = max(dp)
+    wanted = sorted(dp[best_total], reverse=True)
+
+    # 面額對應返真實券：同一面額用最早抽到嘅先（FIFO）
+    buckets = {}
+    for c in sorted(unused_coupons, key=lambda x: (x.draw_date or date.min, x.id)):
+        buckets.setdefault(c.amount, []).append(c)
+    picked = []
+    for value in wanted:
+        bucket = buckets.get(value) or []
+        if bucket:
+            picked.append(bucket.pop(0))
+    return picked, sum(c.amount for c in picked)
+
+
+
 def parse_theme(raw):
     """驗證前端抽到嘅顏色組合，回傳 (ok, 可以儲存嘅 JSON 字串或 None)。
 
@@ -129,10 +231,9 @@ class Coupon(db.Model):
             "draw_date": self.draw_date.isoformat() if self.draw_date else None,
             "is_used": self.is_used,
             "used_date": self.used_date.isoformat() if self.used_date else None,
-            # 禮遇券冇最低消費（唔可以將 -1 乘 3）
-            "minimum_spend": 0
-            if self.amount == COURTESY_AMOUNT
-            else self.amount * 3,
+            # 最低消費：禮遇券 0、12 元券 $100（另需商舖允許）、其餘＝面額 × 3。
+            # 同消費計算器用同一個規則函式，避免兩邊唔一致。
+            "minimum_spend": minimum_spend_for(self.amount),
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
@@ -481,6 +582,55 @@ def get_summary():
         )
 
     return jsonify({"platforms": summary, "total_unused": total_unused})
+
+
+@app.route("/api/calculator", methods=["POST"])
+def calculate_spend():
+    """消費計算器：輸入消費金額，計出可以用幾多券（可以疊用、跨平台分開支付）。
+
+    規則：券總值 × SPEND_MULTIPLIER ≤ 消費額；12 元券例外，要消費滿
+    SPECIAL_MIN_SPEND 而且商舖允許。組合由手上「未使用」嘅券砌出，同一券值
+    之下會揀較少張數，實際用最早抽到嘅先（FIFO）。
+    """
+    user_id = get_user_id()
+    if not user_id:
+        return jsonify({"error": "請先登入"}), 401
+
+    data = request.get_json(silent=True) or {}
+    try:
+        raw = float(data.get("amount"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "請輸入有效嘅消費金額"}), 400
+    if not 0 < raw <= MAX_CALC_AMOUNT:
+        return jsonify({"error": "請輸入有效嘅消費金額"}), 400
+
+    amount = int(raw)  # 澳門消費以元為單位，小數向下取整
+    allow_special = bool(data.get("allow_special"))
+
+    unused = (
+        Coupon.query.filter_by(user_id=user_id, is_used=False)
+        .order_by(Coupon.draw_date.asc(), Coupon.id.asc())
+        .all()
+    )
+    picked, total_value = pick_best_combo(unused, amount, allow_special)
+
+    inventory = {}
+    for coupon in unused:
+        key = str(coupon.amount)
+        inventory[key] = inventory.get(key, 0) + 1
+
+    return jsonify(
+        {
+            "amount": amount,
+            "cap": amount // SPEND_MULTIPLIER,
+            "max_value": total_value,
+            "pay_after": amount - total_value,
+            "combo": [c.to_dict() for c in picked],
+            "denominations": denomination_rules(amount, allow_special),
+            "inventory": inventory,
+            "allow_special": allow_special,
+        }
+    )
 
 
 if __name__ == "__main__":
