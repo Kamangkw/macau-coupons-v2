@@ -516,5 +516,11 @@ function renderCalculator(d) {
     const payHtml = '<p class="calc-pay">現金實付 <strong>' + money(d.pay_after) +
         '</strong>　（消費 ' + money(d.amount) + '）</p>';
 
-    box.innerHTML = comboHtml + payHtml + caption;
+    // 12 元商戶券係先減賬單，所以要講清楚「消費額 → 扣減後賬單」
+    const discountHtml = d.special_applied
+        ? '<p class="calc-discount">' + money(d.special_value) + ' 商戶券先減賬單：' +
+          money(d.bill) + ' 減至 ' + money(d.base) + '</p>'
+        : '';
+
+    box.innerHTML = discountHtml + comboHtml + payHtml + caption;
 }

@@ -1089,6 +1089,14 @@ td:last-child .btn {
     color: var(--muted);
 }
 
+/* 12 元商戶券：先減賬單（顯示喺最頂，因為佢係第一步） */
+.calc-discount {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--success-fg);
+}
+
 .calc-combo {
     list-style: none;
     display: flex;

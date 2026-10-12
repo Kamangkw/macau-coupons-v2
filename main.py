@@ -80,14 +80,20 @@ AMOUNT_LABELS = {a: amount_label(a) for a in COUPON_OPTIONS}
 
 # ── 消費計算器規則（2026-10-11）─────────────────────────────────────
 # 偉仔確認嘅實際規則：
-#   1. 一般券（10/20/50/100/200）：整筆消費嘅「券總值 × 3」唔可以超過消費額
-#      （即係每張券背後要有 3 倍消費支撐；疊用時睇總值，例：消費 60 最多用 20 元券）
-#   2. 12 元券係例外：改為「消費滿 100 元」＋「商舖允許」先可以用，
-#      但仍然計入上面嘅券總值上限（唔係額外豁免）
+#   1. 一般券（10/20/50/100/200）：每個平台嘅「支付總數」要夠大 ——
+#      一個平台支付 X 只可以支撐 3X 以內嘅一般券（疊用睇總值）
+#   2. 12 元券係「商戶優惠券」，**先減賬單**（2026-10-11 改）：
+#      商舖接受就可以先用 $12 券把賬單減 12 元，之後嘅一般券係用
+#      「扣減後嘅金額」去計 3 倍規則。
+#        例：消費 $102 → 用 $12 券 → 賬單 $90 → 再用 $20 ＋ $10 券
+#            （3 × 30 = 90 ≤ 90）→ 支付 $90（其中現金 $60）
+#      因為 $12 會令可用額縮細（可能反而用少啲一般券），所以兩個情境
+#      （用／唔用）都要計一次，揀總節省大嘅。
 #   3. 券可以疊用，跨平台分開支付都可以疊
 SPEND_MULTIPLIER = 3
 SPECIAL_AMOUNT = 12
 SPECIAL_MIN_SPEND = 100
+SPECIAL_MAX_PER_BILL = 1  # 一張單最多用幾多張 12 元商戶券（未經偉仔確認）
 MAX_CALC_AMOUNT = 1_000_000
 
 
@@ -127,8 +133,8 @@ def reason_for(value, amount, allow_special, usable):
     if usable:
         return "已符合條件"
     if value == SPECIAL_AMOUNT:
-        # 12 元券嘅條件係「單一平台支付滿 100」（唔係全單滿 100）
-        needs = [f"單一平台支付滿 {SPECIAL_MIN_SPEND} 元"]
+        # 12 元券係商戶優惠券：先減賬單，條件係消費滿 100（另加商舖允許）
+        needs = [f"消費滿 {SPECIAL_MIN_SPEND} 元"]
         if not allow_special:
             needs.append("商舖允許")
         return "＋".join(needs)
@@ -164,26 +170,20 @@ def best_within(coupons, cap):
 
 
 def subset_options(coupons, amount):
-    """一個平台嘅可選組合清單：[(支付總數, 券值, [Coupon…], 用完？), …]
+    """一個平台（只管一般券）嘅可選組合清單：[(支付總數, 券值, [Coupon…], 用完？), …]
 
-    支付總數＝呢個平台最少要支付幾多：
-      • 一般券：3 × 券總值（消費滿 3 倍先可以用）
-      • 有 12 元券：max(3 × 券總值, 100)（12 元券要「單一平台支付滿 100」）
-        ← 注意：當平台本身已經要支付 ≥100（3 倍 ≥100），12 元券係「免費搭車」
+    支付總數＝呢個平台最少要支付幾多＝3 × 券總值（消費滿 3 倍先可以用）。
+    呢度嘅 amount 係「可以用嚟支付嘅金額」（扣減咗 12 元商戶券之後嘅賬單）。
 
     第 4 個元素「用完？」＝呢個組合會唔會用光該平台所有合資格未用券
     （用光＝以後唔使再為呢個平台開 app）。
 
-    假設：同一個平台嘅支付最多用 1 張 12 元券（滿減券一般每筆一次；
-    如果實際可以疊多張，改 SPECIAL_MAX_PER_PAY 就得）。
+    ⚠️ 12 元商戶券唔屬任何平台組合：佢係先減賬單，由 pick_best_combo 處理。
     """
-    general = [c for c in coupons if c.amount != SPECIAL_AMOUNT]
-    specials = [c for c in coupons if c.amount == SPECIAL_AMOUNT]
-
     # 一般券：可行券值總和 → 最少張數組合（總和上限 = amount // 3）
     limit = amount // SPEND_MULTIPLIER
     sums = {0: []}
-    for c in general:
+    for c in coupons:
         for total in sorted(sums, reverse=True):
             nxt = total + c.amount
             if nxt > limit:
@@ -200,15 +200,6 @@ def subset_options(coupons, amount):
         options.append(
             (total * SPEND_MULTIPLIER, total, list(combo), len(combo) == len(coupons))
         )
-    if specials:
-        for total, combo in sums.items():
-            cost = max(total * SPEND_MULTIPLIER, SPECIAL_MIN_SPEND)
-            if cost > amount:
-                continue
-            picked = list(combo) + [specials[0]]
-            options.append(
-                (cost, total + SPECIAL_AMOUNT, picked, len(picked) == len(coupons))
-            )
     return options
 
 
@@ -223,41 +214,20 @@ def _combo_score(state):
     return (value, -plats, cleared, -count)
 
 
-def pick_best_combo(unused_coupons, amount, allow_special):
-    """砌出最佳券組合，目標：① 券值最大 ② 平台數最少 ③ 用完嘅平台最多 ④ 張數最少。
+def _grouped_knapsack(by_platform, base):
+    """喺 base（＝可以用嚟支付嘅金額）之下，砌出各平台嘅最佳券組合。
 
-    限制係「每個平台嘅支付總數」：一個平台支付 $X 只可以支撐
-    3X 以內嘅一般券，或者（有 12 元券時）X 要去到 100。
-    所以 $100 消費用唔到「$20 券（要支付 60）＋ $12 券（要支付 100）」＝ 160。
-
-    回傳 dict（picked / total_value / platform_count / groups / unused_eligible）。
+    每個平台最多揀一個組合（見 subset_options）；回傳最好嗰個
+    （value / platforms / cleared / count / assign / cost），冇組合就 None。
     """
-    empty = {
-        "picked": [],
-        "total_value": 0,
-        "platform_count": 0,
-        "groups": [],
-        "unused_eligible": 0,
-    }
-    pool = [c for c in unused_coupons if coupon_eligible(c, amount, allow_special)]
-    if not pool or amount <= 0:
-        return empty
-
-    # FIFO：最早抽到嘅排最前
-    pool.sort(key=lambda c: (c.draw_date or date.min, c.id))
-
-    by_platform = {}
-    for c in pool:
-        by_platform.setdefault(c.platform, []).append(c)
-
     options = {}
     for platform, coupons in by_platform.items():
-        usable = [o for o in subset_options(coupons, amount) if o[0] <= amount]
+        usable = [o for o in subset_options(coupons, base) if o[0] <= base]
         if len(usable) > 1:
             options[platform] = usable
 
     if not options:
-        return empty
+        return None
 
     # 分組背包：cost → (券值, 平台數, 用完平台數, 張數, 指派)。每個平台最多揀一個選項。
     # 平台次序跟「最早抽到嘅券」，令同樣券值時 FIFO 決定邊個平台先。
@@ -276,7 +246,7 @@ def pick_best_combo(unused_coupons, amount, allow_special):
                 if ocost == 0:
                     continue
                 ncost = cost + ocost
-                if ncost > amount:
+                if ncost > base:
                     continue
                 cand = (
                     value + ovalue,
@@ -291,8 +261,90 @@ def pick_best_combo(unused_coupons, amount, allow_special):
         best = updated
 
     best_cost = max(best, key=lambda c: _combo_score(best[c]))
-    value, platform_count, _cleared, _count, assign = best[best_cost]
+    value, plats, cleared, count, assign = best[best_cost]
+    return {
+        "value": value,
+        "platforms": plats,
+        "cleared": cleared,
+        "count": count,
+        "assign": assign,
+        "cost": best_cost,
+    }
 
+
+def pick_best_combo(unused_coupons, amount, allow_special):
+    """砌出最佳券組合。
+
+    ⚠️ 12 元券係「商戶優惠券」，**先減賬單**（2026-10-11 偉仔確認）：
+    商舖接受就可以先用 $12 券把賬單減 12 元，之後嘅一般券用「扣減後嘅金額」
+    去計 3 倍規則。例：消費 $102 → 用 $12 券 → 賬單 $90 → 再用 $20 ＋ $10 券
+    （3 × 30 = 90 ≤ 90）→ 支付 $90（現金 $60）。
+    一張單最多用 SPECIAL_MAX_PER_BILL 張。因為 $12 會縮細可用額（有時唔用
+    反而可以用多啲一般券），所以兩個情境都要計一次，揀總節省大嘅。
+
+    排序目標：① 總節省最大（$12 商戶券算 12）② 平台數最少
+    ③ 用完（清零）嘅平台最多 ④ 張數最少。
+
+    回傳 dict（picked / total_value / platform_count / groups / unused_eligible /
+    special_applied / special_value / bill / base）。
+    """
+    empty = {
+        "picked": [],
+        "total_value": 0,
+        "platform_count": 0,
+        "groups": [],
+        "unused_eligible": 0,
+        "special_applied": False,
+        "special_value": 0,
+        "bill": amount,
+        "base": amount,
+    }
+    pool = [c for c in unused_coupons if coupon_eligible(c, amount, allow_special)]
+    if not pool or amount <= 0:
+        return empty
+
+    # FIFO：最早抽到嘅排最前
+    pool.sort(key=lambda c: (c.draw_date or date.min, c.id))
+
+    # 12 元商戶券唔入平台組合（佢係先減賬單，唔屬於任何平台）
+    specials = [c for c in pool if c.amount == SPECIAL_AMOUNT][:SPECIAL_MAX_PER_BILL]
+    by_platform = {}
+    for c in pool:
+        if c.amount == SPECIAL_AMOUNT:
+            continue
+        by_platform.setdefault(c.platform, []).append(c)
+
+    # 情境一：唔用 $12（可以支付嘅金額 = 消費額）
+    # 情境二：用一張 $12 先減賬單（可以支付嘅金額 = 消費額 − 12）
+    scenarios = [
+        {"special": None, "base": amount, "combo": _grouped_knapsack(by_platform, amount)}
+    ]
+    if specials and amount - SPECIAL_AMOUNT > 0:
+        cut = amount - SPECIAL_AMOUNT
+        scenarios.append(
+            {
+                "special": specials[0],
+                "base": cut,
+                "combo": _grouped_knapsack(by_platform, cut),
+            }
+        )
+
+    def scenario_score(sc):
+        combo = sc["combo"]
+        value = (combo["value"] if combo else 0) + (
+            SPECIAL_AMOUNT if sc["special"] is not None else 0
+        )
+        plats = combo["platforms"] if combo else 0
+        cleared = combo["cleared"] if combo else 0
+        count = (combo["count"] if combo else 0) + (1 if sc["special"] is not None else 0)
+        return (value, -plats, cleared, -count)
+
+    chosen = max(scenarios, key=scenario_score)
+    combo = chosen["combo"]
+    if combo is None and chosen["special"] is None:
+        return empty
+
+    assign = combo["assign"] if combo else {}
     groups = []
     picked = []
     # 券值大嘅平台排前面；最後一個負責吸收零頭
@@ -305,27 +357,36 @@ def pick_best_combo(unused_coupons, amount, allow_special):
                 "count": len(ocombo),
                 "total": ovalue,
                 "amounts": sorted((c.amount for c in ocombo), reverse=True),
-                "pay_min": ocost,        # 規則上最少要支付幾多（3 倍／100）
+                "pay_min": ocost,        # 規則上最少要支付幾多（3 × 券值）
                 "pay_total": ocost,      # 實際支付總數（下面會加零頭）
                 "cash": ocost - ovalue,
                 "cleared": ocleared,     # 呢個平台嘅券今次係唔係全部用光
             }
         )
 
-    # 零頭撥入最後一個平台，令各平台支付總數加起來剛剛好等於消費金額
+    # 零頭撥入最後一個平台，令各平台支付總數加起來剛好等於（扣減後嘅）賬單
     if groups:
-        remainder = amount - best_cost
+        remainder = chosen["base"] - combo["cost"]
         if remainder > 0:
             last = groups[-1]
             last["pay_total"] += remainder
             last["cash"] = last["pay_total"] - last["total"]
 
+    if chosen["special"] is not None:
+        picked.append(chosen["special"])
+
+    general_value = combo["value"] if combo else 0
     return {
         "picked": picked,
-        "total_value": value,
-        "platform_count": platform_count,
+        "total_value": general_value
+        + (SPECIAL_AMOUNT if chosen["special"] is not None else 0),
+        "platform_count": combo["platforms"] if combo else 0,
         "groups": groups,
         "unused_eligible": len(pool) - len(picked),
+        "special_applied": chosen["special"] is not None,
+        "special_value": SPECIAL_AMOUNT if chosen["special"] is not None else 0,
+        "bill": amount,
+        "base": chosen["base"],
     }
 
 
@@ -768,9 +829,10 @@ def get_summary():
 def calculate_spend():
     """消費計算器：輸入消費金額，計出可以用幾多券（可以疊用、跨平台分開支付）。
 
-    規則：券總值 × SPEND_MULTIPLIER ≤ 消費額；12 元券例外，要消費滿
-    SPECIAL_MIN_SPEND 而且商舖允許。組合由手上「未使用」嘅券砌出，同一券值
-    之下會揀較少張數，實際用最早抽到嘅先（FIFO）。
+    規則：每個平台嘅支付總數 × 3 ≥ 該平台用嘅一般券總值；12 元商戶券例外，
+    要消費滿 SPECIAL_MIN_SPEND 而且商舖允許，並且係「先減賬單」之後先用一般券。
+    組合由手上「未使用」嘅券砌出，同一券值之下會揀較少張數，
+    實際用最早抽到嘅先（FIFO）。
     """
     user_id = get_user_id()
     if not user_id:
@@ -803,7 +865,8 @@ def calculate_spend():
     return jsonify(
         {
             "amount": amount,
-            "cap": amount // SPEND_MULTIPLIER,
+            # cap：一般券喺今次「可以支付嘅金額」之下嘅總值上限（扣減 $12 後會細啲）
+            "cap": result["base"] // SPEND_MULTIPLIER,
             "max_value": result["total_value"],
             "pay_after": amount - result["total_value"],
             "combo": [c.to_dict() for c in picked],
@@ -811,6 +874,11 @@ def calculate_spend():
             "by_platform": result["groups"],
             "platform_count": result["platform_count"],
             "unused_eligible": result["unused_eligible"],
+            # 12 元商戶券：先減賬單（bill = 消費額，base = 扣減後用嚟支付嘅金額）
+            "special_applied": result["special_applied"],
+            "special_value": result["special_value"],
+            "bill": result["bill"],
+            "base": result["base"],
             "denominations": denomination_rules(amount, allow_special),
             "inventory": inventory,
             "allow_special": allow_special,
