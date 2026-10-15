@@ -526,7 +526,7 @@ function renderCalculator(d) {
     // 而係「消費額 − 3 × 券值」＝冇任何券貼住嘅一段。
     // 冇用到券嘅時候上面 caption 已經講晒，所以唔重複出。
     const uncoveredHtml = (combo.length && d.uncovered > 0)
-        ? '<p class="calc-uncovered">' + money(d.uncovered) + ' 淨現金消費</p>'
+        ? '<p class="calc-uncovered">' + money(d.uncovered) + ' 冇券 cover</p>'
         : '';
 
     box.innerHTML = discountHtml + comboHtml + payHtml + uncoveredHtml + caption;
