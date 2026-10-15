@@ -522,5 +522,12 @@ function renderCalculator(d) {
           money(d.bill) + ' 減至 ' + money(d.base) + '</p>'
         : '';
 
-    box.innerHTML = discountHtml + comboHtml + payHtml + caption;
+    // 冇被券 cover 嘅金額（偉仔 2026-10-15 要）：紅字提示，唔係現金實付，
+    // 而係「消費額 − 3 × 券值」＝冇任何券貼住嘅一段。
+    // 冇用到券嘅時候上面 caption 已經講晒，所以唔重複出。
+    const uncoveredHtml = (combo.length && d.uncovered > 0)
+        ? '<p class="calc-uncovered">' + money(d.uncovered) + ' 淨現金消費</p>'
+        : '';
+
+    box.innerHTML = discountHtml + comboHtml + payHtml + uncoveredHtml + caption;
 }

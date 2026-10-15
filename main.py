@@ -298,6 +298,7 @@ def pick_best_combo(unused_coupons, amount, allow_special):
         "special_value": 0,
         "bill": amount,
         "base": amount,
+        "uncovered": amount,
     }
     pool = [c for c in unused_coupons if coupon_eligible(c, amount, allow_special)]
     if not pool or amount <= 0:
@@ -387,6 +388,10 @@ def pick_best_combo(unused_coupons, amount, allow_special):
         "special_value": SPECIAL_AMOUNT if chosen["special"] is not None else 0,
         "bill": amount,
         "base": chosen["base"],
+        # 冇被券 cover 嘅金額（＝ 可支付金額 − 3 × 一般券值）：呢段冇任何券貼住，
+        # 係「淨現金消費」。偉仔 2026-10-15 要前端紅字提示。
+        # 例：消費 108、兩張 $10 券 → 108 − 3×20 = 48
+        "uncovered": chosen["base"] - SPEND_MULTIPLIER * general_value,
     }
 
 
@@ -879,6 +884,8 @@ def calculate_spend():
             "special_value": result["special_value"],
             "bill": result["bill"],
             "base": result["base"],
+            # 冇被券 cover 嘅金額（前端紅字「淨現金消費」用）
+            "uncovered": result["uncovered"],
             "denominations": denomination_rules(amount, allow_special),
             "inventory": inventory,
             "allow_special": allow_special,

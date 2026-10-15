@@ -1082,6 +1082,21 @@ td:last-child .btn {
     color: var(--success-fg);
 }
 
+/* 冇被券 cover 嘅金額（「淨現金消費」）：紅字強調。
+   ⚠️ 顏色係量出嚟揀嘅（真 WCAG 對比，背景 = 卡片 var(--surface-2)）：
+     --danger (#e74c3c) 喺淺色只有 3.49:1 ❌（全部色相最差）
+     --danger-dark (#c0392b) → 4.97:1 ✅；深色模式 #ff9a8b → 5.30:1 ✅ */
+.calc-uncovered {
+    margin: 8px 0 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--danger-dark);
+}
+
+[data-theme="dark"] .calc-uncovered {
+    color: #ff9a8b;
+}
+
 /* 最底細字：用券總額（唔係重點，所以最細最淡） */
 .calc-caption {
     margin: 8px 0 0;
